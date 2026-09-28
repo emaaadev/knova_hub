@@ -6,4 +6,15 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\KnovaHub.InfrastructureLayer\KnovaHub.InfrastructureLayer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Contract\" />
+    <Folder Include="DTOs\" />
+    <Folder Include="MappingProfiles\" />
+    <Folder Include="Services\" />
+  </ItemGroup>
+
 </Project>

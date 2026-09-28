@@ -6,4 +6,16 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\KnovaHub.DomainLayer\KnovaHub.DomainLayer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="DbContext\" />
+    <Folder Include="Exceptions\" />
+    <Folder Include="Interfaces\" />
+    <Folder Include="Models\" />
+    <Folder Include="Repositories\" />
+  </ItemGroup>
+
 </Project>
