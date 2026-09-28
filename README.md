@@ -12,3 +12,17 @@ Sirve como una plataforma centralizada diseñada para capturar, organizar y reco
 * **Organización automática:** Utiliza procesamiento de lenguaje natural para etiquetar, categorizar y estructurar la información sin esfuerzo manual.
 * **Recomendaciones proactivas:** La IA sugiere artículos o soluciones basándose en el contexto del proyecto actual del usuario.
 * **Búsqueda semántica:** Permite a los usuarios hacer preguntas en lenguaje natural para encontrar respuestas precisas dentro de los documentos de la empresa, en lugar de depender de palabras clave exactas.
+
+## Arquitectura y Estructura del Proyecto
+
+El proyecto sigue una arquitectura Cliente-Servidor. El backend está construido en **C# (.NET)** implementando una rigurosa **Arquitectura de N-Capas (N-Tier Architecture)** para garantizar un alto grado de escalabilidad, mantenibilidad y el cumplimiento del principio de separación de responsabilidades. El cliente web está desarrollado de manera ágil utilizando **JavaScript Vanilla**.
+
+A continuación, se detalla la estructura principal del repositorio:
+
+```text
+📁 KnovaHub/
+├── 📁 Client-Js                     # Frontend
+├── 📁 KnovaHub.API                  # Backend: Capa de Presentación (API)
+├── 📁 KnovaHub.ApplicationLayer     # Backend: Capa de Aplicación
+├── 📁 KnovaHub.DomainLayer          # Backend: Capa de Dominio (Núcleo)
+└── 📁 KnovaHub.InfrastructureLayer  # Backend: Capa de Infraestructura
