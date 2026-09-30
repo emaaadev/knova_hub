@@ -1,51 +1,458 @@
+/* =========================
+   01. COLORES Y BASE
+========================= */
+
+:root {
+    --white: #ffffff;
+    --section-background: #f3f6f8;
+    --heading: #06283d;
+    --text: #52616b;
+    --border: #dee6ea;
+    --brand: #01c8b0;
+    --brand-hover: #00b49e;
+    --focus: #007f70;
+}
+
 * {
-    margin: 0;
-    padding: 0;
     box-sizing: border-box;
 }
 
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 100px;
+}
+
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f5f5f5;
+    margin: 0;
+    background: var(--white);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    line-height: 1.6;
 }
 
-.header {
-    padding: 20px;
-    background-color: white;
+h1,
+h2,
+h3,
+p {
+    margin: 0;
 }
 
-.logo-container {
+h1,
+h2,
+h3 {
+    color: var(--heading);
+    font-weight: 700;
+    line-height: 1.15;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+a:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 4px;
+}
+
+img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+.container {
+    width: min(1080px, calc(100% - 48px));
+    margin-inline: auto;
+}
+
+/* Acceso al contenido mediante teclado. */
+.skip-link {
+    position: fixed;
+    top: -100px;
+    left: 20px;
+    z-index: 200;
+    padding: 12px 16px;
+    background: var(--heading);
+    color: var(--white);
+    border-radius: 5px;
+}
+
+.skip-link:focus {
+    top: 12px;
+}
+
+
+/* =========================
+   02. NAVEGACIÓN
+========================= */
+
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+}
+
+.navigation {
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: space-between;
+    min-height: 80px;
+    gap: 24px;
 }
 
-.logo {
-    width: 50px;
-    height: 50px;
-    object-fit: contain;
+.brand {
+    display: block;
+    flex-shrink: 0;
 }
 
-.logo-name {
-    font-size: 24px;
-    font-weight: bold;
+.brand img {
+    width: 165px;
 }
+
+.navigation-links {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--heading);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.navigation-links a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 10px 16px;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.navigation-links a:hover {
+    background: var(--section-background);
+    text-decoration: none;
+}
+
+/* Destacar GitHub sin añadir clases al HTML actual. */
+.navigation-links a[href="https://github.com/emaaadev/knova_hub"] {
+    margin-left: 12px;
+    padding: 9px 18px;
+    border: 1px solid var(--border);
+    font-weight: 600;
+}
+
+
+/* =========================
+   03. PRESENTACIÓN
+========================= */
 
 .hero {
-    padding: 100px 20px;
+    padding-block: 80px;
     text-align: center;
 }
 
-    .hero h1 {
-        font-size: 48px;
-        margin-bottom: 20px;
-    }
+.hero h1 {
+    max-width: 960px;
+    margin-inline: auto;
+    font-size: clamp(38px, 5.6vw, 68px);
+    letter-spacing: -2.4px;
+}
 
-    .hero p {
-        font-size: 20px;
-        margin-bottom: 15px;
-    }
+.hero h1 span {
+    display: block;
+}
 
 .hero-description {
-    color: #666;
+    max-width: 600px;
+    margin: 24px auto 32px;
+    font-size: 18px;
+    line-height: 1.7;
+}
+
+.button {
+    display: inline-block;
+    padding: 13px 24px;
+    background: var(--brand);
+    color: var(--heading);
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+}
+
+.button:hover {
+    background: var(--brand-hover);
+    text-decoration: none;
+}
+
+
+/* =========================
+   04. FUNCIONES Y TARJETAS
+========================= */
+
+.features {
+    padding-block: 80px;
+    background: var(--section-background);
+}
+
+.features h2 {
+    max-width: 680px;
+    margin-inline: auto;
+    text-align: center;
+    font-size: clamp(28px, 3.2vw, 38px);
+    letter-spacing: -1px;
+}
+
+.feature-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+    margin-top: 40px;
+}
+
+.feature {
+    padding: 32px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.feature h3 {
+    margin-bottom: 16px;
+    font-size: 23px;
+    letter-spacing: -0.5px;
+}
+
+.feature p {
+    font-size: 15px;
+    line-height: 1.7;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .feature:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgb(6 40 61 / 7%);
+    }
+}
+
+/* Aparición activada desde JavaScript. */
+@keyframes reveal-card {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.feature.is-revealing {
+    animation: reveal-card 500ms ease both;
+}
+
+.feature.is-revealing:nth-child(2) {
+    animation-delay: 100ms;
+}
+
+.feature.is-revealing:nth-child(3) {
+    animation-delay: 200ms;
+}
+
+
+/* =========================
+   05. PROYECTO ACADÉMICO
+========================= */
+
+.project {
+    padding-block: 48px;
+    text-align: center;
+}
+
+.project-content {
+    max-width: 720px;
+}
+
+.project h2 {
+    margin-bottom: 16px;
+    font-size: clamp(24px, 2.8vw, 30px);
+    letter-spacing: -0.7px;
+}
+
+.project-description {
+    font-size: 15px;
+    line-height: 1.7;
+}
+
+.project-note {
+    margin-top: 16px;
+    font-size: 13px;
+}
+
+.institution-logo {
+    display: block;
+    width: fit-content;
+    margin: 24px auto 0;
+}
+
+.institution-logo img {
+    width: 120px;
+
+    /* Hace legible el PNG blanco actual sobre el fondo claro. */
+    filter: brightness(0);
+}
+
+
+/* =========================
+   06. FOOTER
+========================= */
+
+.site-footer {
+    border-top: 1px solid var(--border);
+}
+
+.footer-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding-block: 24px;
+    font-size: 12px;
+}
+
+.footer-content a {
+    padding-block: 8px;
+}
+
+
+/* =========================
+   07. TABLET Y MÓVIL
+========================= */
+
+@media (max-width: 760px) {
+    .feature-list {
+        grid-template-columns: 1fr;
+        max-width: 540px;
+        margin-inline: auto;
+        gap: 16px;
+    }
+
+    .hero,
+    .features {
+        padding-block: 64px;
+    }
+}
+
+@media (max-width: 540px) {
+    html {
+        scroll-padding-top: 150px;
+    }
+
+    .container {
+        width: calc(100% - 40px);
+    }
+
+    .navigation {
+        flex-direction: column;
+        justify-content: center;
+        gap: 0;
+        padding-block: 6px 12px;
+    }
+
+    .brand img {
+        width: 140px;
+    }
+
+    .navigation-links {
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 4px;
+        font-size: 13px;
+    }
+
+    .navigation-links a {
+        padding-inline: 12px;
+    }
+
+    .navigation-links a[href="https://github.com/emaaadev/knova_hub"] {
+        margin-left: 4px;
+        padding-inline: 14px;
+    }
+
+    .hero,
+    .features {
+        padding-block: 48px;
+    }
+
+    .hero h1 {
+        font-size: clamp(34px, 9vw, 46px);
+        letter-spacing: -1.4px;
+    }
+
+    .hero-description {
+        margin-block: 24px;
+        font-size: 16px;
+    }
+
+    .feature-list {
+        margin-top: 32px;
+    }
+
+    .feature {
+        padding: 24px;
+    }
+
+    .feature h3 {
+        font-size: 21px;
+    }
+
+    .project {
+        padding-block: 40px;
+    }
+
+    .institution-logo img {
+        width: 110px;
+    }
+
+    .footer-content {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+}
+
+
+/* =========================
+   08. MOVIMIENTO REDUCIDO
+========================= */
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    .feature,
+    .button,
+    .navigation-links a {
+        transition: none;
+    }
+
+    .feature:hover {
+        transform: none;
+    }
+
+    .feature.is-revealing {
+        animation: none;
+    }
 }
