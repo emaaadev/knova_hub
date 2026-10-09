@@ -43,35 +43,37 @@
 
                 <div class="auth-heading">
                     <h2 id="login-title">Iniciar sesión</h2>
-                    <p>Accede a tu espacio de conocimiento.</p>
+                    <p>Accede con tu RNC o correo corporativo.</p>
                 </div>
 
-                <form class="auth-form" action="#" method="post" novalidate>
+                <form id="login-form" class="auth-form" novalidate>
+                    <div class="form-message" id="form-message" role="alert" hidden></div>
+
                     <div class="field">
-                        <label for="usuario">Usuario o correo</label>
+                        <label for="identificador">RNC o correo corporativo <span class="req">*</span></label>
                         <input
                             type="text"
-                            id="usuario"
-                            name="usuario"
-                            placeholder="tu.usuario@empresa.com"
+                            id="identificador"
+                            name="identificador"
+                            placeholder="101123456 o contacto@empresa.com"
                             autocomplete="username"
                             required>
                     </div>
 
                     <div class="field">
                         <div class="field-label-row">
-                            <label for="contrasena">Contraseña</label>
+                            <label for="password">Contraseña <span class="req">*</span></label>
                             <a href="#recuperar">¿Olvidaste tu contraseña?</a>
                         </div>
                         <div class="password-wrap">
                             <input
                                 type="password"
-                                id="contrasena"
-                                name="contrasena"
+                                id="password"
+                                name="password"
                                 placeholder="••••••••"
                                 autocomplete="current-password"
                                 required>
-                            <button type="button" class="password-toggle" data-toggle="contrasena" aria-label="Mostrar contraseña">
+                            <button type="button" class="password-toggle" data-toggle="password" aria-label="Mostrar contraseña">
                                 Mostrar
                             </button>
                         </div>
@@ -89,7 +91,7 @@
 
                 <p class="auth-switch">
                     ¿Aún no tienes cuenta?
-                    <a href="register.html">Crear una cuenta</a>
+                    <a href="register.html">Registrar empresa</a>
                 </p>
             </div>
         </section>

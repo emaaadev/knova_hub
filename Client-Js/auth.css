@@ -201,6 +201,10 @@ img {
     color: var(--heading);
 }
 
+.req {
+    color: var(--danger);
+}
+
 .field-label-row {
     display: flex;
     align-items: center;
@@ -218,7 +222,8 @@ img {
 }
 
 .field input,
-.field select {
+.field select,
+.field textarea {
     width: 100%;
     min-height: 48px;
     padding: 10px 14px;
@@ -229,6 +234,10 @@ img {
     font-size: 15px;
     color: var(--heading);
     transition: border-color 0.2s ease;
+}
+
+.field textarea {
+    resize: vertical;
 }
 
 .field select {
@@ -243,20 +252,34 @@ img {
     background-repeat: no-repeat;
 }
 
-.field input::placeholder {
+.field input::placeholder,
+.field textarea::placeholder {
     color: var(--muted);
 }
 
 .field input:hover,
-.field select:hover {
+.field select:hover,
+.field textarea:hover {
     border-color: #c4d2da;
 }
 
 .field input:focus,
-.field select:focus {
+.field select:focus,
+.field textarea:focus {
     border-color: var(--focus);
     outline: 3px solid rgb(1 200 176 / 25%);
     outline-offset: 0;
+}
+
+.field input.has-error,
+.field select.has-error,
+.field textarea.has-error {
+    border-color: var(--danger);
+}
+
+.field-error {
+    font-size: 13px;
+    color: var(--danger);
 }
 
 .password-wrap {
@@ -326,6 +349,26 @@ img {
     background: var(--brand-hover);
 }
 
+.button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.form-message {
+    padding: 12px 14px;
+    border-radius: 6px;
+    font-size: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+}
+
+.form-message.is-error {
+    background: #fdecec;
+    border-color: #f2c4c4;
+    color: var(--danger);
+}
+
 .auth-switch {
     margin-top: 28px;
     font-size: 14px;
@@ -385,7 +428,8 @@ img {
 
     .button,
     .field input,
-    .field select {
+    .field select,
+    .field textarea {
         transition: none;
     }
 }
