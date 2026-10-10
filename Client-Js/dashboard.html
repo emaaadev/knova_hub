@@ -17,35 +17,94 @@
 <body>
     <a class="skip-link" href="#contenido">Saltar al contenido</a>
 
-    <header class="dashboard-header">
-        <div class="container header-inner">
-            <a class="logo" href="index.html" aria-label="Knova Hub — Inicio">
+    <div class="shell">
+        <aside class="sidebar">
+            <a class="sidebar-logo" href="index.html" aria-label="Knova Hub — Inicio">
                 <img src="assets/logo.png" alt="Knova Hub" width="1983" height="793">
             </a>
 
-            <div class="user-menu">
-                <div class="user-info">
-                    <span class="user-name" id="user-name"></span>
-                    <span class="role-badge" id="user-role"></span>
+            <nav class="side-nav" aria-label="Navegación del panel">
+                <a class="nav-item is-active" href="#" aria-current="page">Inicio</a>
+                <a class="nav-item" href="#">Documentos</a>
+                <a class="nav-item" href="#">Wikis y minutas</a>
+                <a class="nav-item" href="#">Recomendaciones (IA)</a>
+                <a class="nav-item admin-only" id="nav-usuarios" href="#" hidden>Usuarios</a>
+            </nav>
+        </aside>
+
+        <div class="main">
+            <header class="topbar">
+                <h2 class="topbar-title">Inicio</h2>
+
+                <div class="user-menu">
+                    <div class="user-info">
+                        <span class="user-name" id="user-name"></span>
+                        <span class="role-badge" id="user-role"></span>
+                    </div>
+                    <button type="button" class="logout-btn" id="logout">Cerrar sesión</button>
                 </div>
-                <button type="button" class="logout-btn" id="logout">Cerrar sesión</button>
-            </div>
-        </div>
-    </header>
+            </header>
 
-    <main class="dashboard-main" id="contenido">
-        <div class="container">
-            <div class="dashboard-heading">
-                <h1 id="greeting"></h1>
-                <p id="company-name"></p>
-            </div>
+            <main class="dashboard-content" id="contenido">
+                <section class="welcome">
+                    <h1 id="greeting"></h1>
+                    <p><span id="welcome-company"></span> · RNC <span id="welcome-rnc"></span></p>
+                </section>
 
-            <div class="empty-state">
-                <p class="empty-title">Tu dashboard está vacío</p>
-                <p>Aquí aparecerá el conocimiento de tu empresa.</p>
-            </div>
+                <section class="company-card" aria-label="Datos de la empresa">
+                    <h2>Tu empresa</h2>
+                    <dl class="company-fields">
+                        <div><dt>Nombre</dt><dd id="company-name"></dd></div>
+                        <div><dt>RNC</dt><dd id="company-rnc"></dd></div>
+                        <div><dt>Correo</dt><dd id="company-email"></dd></div>
+                        <div><dt>Teléfono</dt><dd id="company-phone"></dd></div>
+                        <div><dt>Dirección</dt><dd id="company-address"></dd></div>
+                    </dl>
+                </section>
+
+                <section class="summary-grid" aria-label="Resumen">
+                    <article class="summary-card">
+                        <span class="summary-value">0</span>
+                        <span class="summary-label">Documentos</span>
+                    </article>
+                    <article class="summary-card">
+                        <span class="summary-value">0</span>
+                        <span class="summary-label">Wikis</span>
+                    </article>
+                    <article class="summary-card">
+                        <span class="summary-value">0</span>
+                        <span class="summary-label">Usuarios</span>
+                    </article>
+                    <article class="summary-card">
+                        <span class="summary-value">0</span>
+                        <span class="summary-label">Recomendaciones</span>
+                    </article>
+                </section>
+
+                <div class="two-col">
+                    <section class="panel">
+                        <h2>Recomendaciones de la IA</h2>
+                        <p class="empty-text">Aún no hay recomendaciones. Sube conocimiento para empezar.</p>
+                    </section>
+
+                    <section class="panel">
+                        <h2>Actividad reciente</h2>
+                        <p class="empty-text">Aún no hay actividad reciente en tu empresa.</p>
+                    </section>
+                </div>
+
+                <section class="quick-actions">
+                    <h2>Acciones rápidas</h2>
+                    <div class="quick-buttons">
+                        <button type="button" class="quick-btn" disabled>Subir documento</button>
+                        <button type="button" class="quick-btn" disabled>Crear wiki</button>
+                        <button type="button" class="quick-btn" disabled>Invitar usuario</button>
+                    </div>
+                    <p class="coming-soon">Próximamente</p>
+                </section>
+            </main>
         </div>
-    </main>
+    </div>
 </body>
 
 </html>
