@@ -149,6 +149,15 @@ img {
     font-weight: 600;
 }
 
+.navigation-links #authNavButton {
+    background: var(--brand);
+    color: var(--heading);
+}
+.navigation-links #authNavButton:hover {
+    background: var(--brand-hover);
+    text-decoration: none;
+}
+
 
 /* =========================
    03. PRESENTACIÓN

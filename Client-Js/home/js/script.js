@@ -5,6 +5,17 @@ if (currentYear) {
     currentYear.textContent = new Date().getFullYear();
 }
 
+//login boton para redirigir login o dashboard
+const authNavButton = document.getElementById("authNavButton")
+
+if(authNavButton){
+    const token = localStorage.getItem("knovaToken")
+
+    if(token){
+        authNavButton.textContent = "Ir al panel"
+        authNavButton.href = "../dashboard/dashboard.html"
+    }
+}
 // Animar las tarjetas una sola vez al entrar en pantalla.
 // Sin JavaScript, las tarjetas permanecen visibles.
 const cards = document.querySelectorAll(".feature");
