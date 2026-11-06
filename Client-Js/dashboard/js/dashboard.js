@@ -2,7 +2,7 @@ const token = localStorage.getItem("knovaToken");
 const rawUser = localStorage.getItem("knovaUser");
 
 if (!token || !rawUser) {
-    window.location.href = "login.html";
+    window.location.href = "../auth/login.html";
 }
 
 const user = JSON.parse(rawUser);
@@ -27,5 +27,5 @@ if (user.role === "Admin") {
 document.getElementById("logout").addEventListener("click", () => {
     localStorage.removeItem("knovaToken");
     localStorage.removeItem("knovaUser");
-    window.location.href = "login.html";
+    window.location.href = "../auth/login.html";
 });

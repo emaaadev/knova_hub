@@ -183,7 +183,7 @@ if (loginForm) {
             if (response.ok) {
                 localStorage.setItem("knovaToken", data.token);
                 localStorage.setItem("knovaUser", JSON.stringify(data));
-                window.location.href = "dashboard.html";
+                window.location.href = "../dashboard/dashboard.html";
             } else {
                 showMessage(loginForm, data.message || "Credenciales incorrectas.", true);
             }
