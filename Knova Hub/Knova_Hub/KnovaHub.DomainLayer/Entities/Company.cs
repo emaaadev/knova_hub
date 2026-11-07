@@ -12,4 +12,5 @@ public class Company
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<User> Users { get; set; } = new List<User>();
+    public ICollection<Department> Departments { get; set; } = new List<Department>();
 }

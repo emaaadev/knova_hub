@@ -32,7 +32,7 @@ public class AuthServiceRegisterTests
             {
                 admin.Id = 1;
                 admin.Company = company;
-                admin.Role = new Role { Id = SystemRoles.AdminRoleId, Name = SystemRoles.AdminRoleName };
+                admin.Role = new Role { Id = SystemRoles.AdminEmpresaRoleId, Name = SystemRoles.AdminEmpresaRoleName };
                 return admin;
             });
     }
@@ -88,7 +88,7 @@ public class AuthServiceRegisterTests
             Assert.That(companyGuardada.Name, Is.EqualTo("Empresa de Prueba SRL"));
             Assert.That(companyGuardada.Email, Is.EqualTo("contacto@empresa.com"));
             Assert.That(adminGuardado!.Email, Is.EqualTo("contacto@empresa.com"));
-            Assert.That(adminGuardado.RoleId, Is.EqualTo(SystemRoles.AdminRoleId));
+            Assert.That(adminGuardado.RoleId, Is.EqualTo(SystemRoles.AdminEmpresaRoleId));
             Assert.That(adminGuardado.PasswordHash, Is.Not.EqualTo(TestData.PasswordValida),
                 "La contraseña nunca debe guardarse en texto plano");
             Assert.That(BCrypt.Net.BCrypt.Verify(TestData.PasswordValida, adminGuardado.PasswordHash), Is.True);
@@ -106,7 +106,7 @@ public class AuthServiceRegisterTests
         {
             Assert.That(respuesta.Token, Is.Not.Empty);
             Assert.That(new JwtSecurityTokenHandler().CanReadToken(respuesta.Token), Is.True);
-            Assert.That(respuesta.Role, Is.EqualTo(SystemRoles.AdminRoleName));
+            Assert.That(respuesta.Role, Is.EqualTo(SystemRoles.AdminEmpresaRoleName));
             Assert.That(respuesta.CompanyName, Is.EqualTo("Empresa de Prueba SRL"));
             Assert.That(respuesta.Rnc, Is.EqualTo("131234567"));
         });

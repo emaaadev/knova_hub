@@ -1,4 +1,5 @@
-﻿using KnovaHub.DomainLayer.Entities;
+﻿using System.Data;
+using KnovaHub.DomainLayer.Entities;
 using KnovaHub.DomainLayer.Repository;
 using KnovaHub.InfrastructureLayer.Data;
 using KnovaHub.InfrastructureLayer.Exceptions;
@@ -24,11 +25,11 @@ public class UserRepository : IUserRepository
             .Include(u => u.Role)
             .Include(u => u.Company);
 
-        // Si solo trae números es un RNC: entra la cuenta Admin de esa empresa.
+        // Si solo trae números es un RNC: entra la cuenta AdminEmpresa de esa empresa.
         if (value.Length > 0 && value.All(char.IsDigit))
         {
             return await query
-                .Where(u => u.Company!.Rnc == value && u.RoleId == SystemRoles.AdminRoleId)
+                .Where(u => u.Company!.Rnc == value && u.RoleId == SystemRoles.AdminEmpresaRoleId)
                 .OrderBy(u => u.Id)
                 .FirstOrDefaultAsync();
         }
@@ -73,5 +74,59 @@ public class UserRepository : IUserRepository
 
         await _context.Entry(admin).Reference(u => u.Role).LoadAsync();
         return admin;
+    }
+
+    public Task<User?> GetByIdInCompanyAsync(int companyId, int userId)
+    {
+        return _context.Users
+            .Include(u => u.Role)
+            .FirstOrDefaultAsync(u => u.Id == userId && u.CompanyId == companyId);
+    }
+
+    public async Task<bool> ChangeRoleKeepingCompanyAdminAsync(int companyId, int userId, int newRoleId, int? departmentId)
+    {
+        // Se bloquea la fila de la empresa: si dos AdminEmpresa se quitan el rol al mismo tiempo,
+        // el segundo espera a que termine el primero y vuelve a contar, así la empresa nunca
+        // se queda sin AdminEmpresa.
+        await using var tx = await _context.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
+        await _context.Database.ExecuteSqlInterpolatedAsync(
+            $"SELECT Id FROM Companies WITH (UPDLOCK, HOLDLOCK) WHERE Id = {companyId}");
+
+        var user = await _context.Users
+            .Include(u => u.SupervisedDepartments)
+            .FirstAsync(u => u.Id == userId && u.CompanyId == companyId);
+
+        var dejaDeSerAdmin = user.RoleId == SystemRoles.AdminEmpresaRoleId
+            && user.IsActive
+            && newRoleId != SystemRoles.AdminEmpresaRoleId;
+
+        if (dejaDeSerAdmin)
+        {
+            var otrosAdmins = await _context.Users.CountAsync(u =>
+                u.CompanyId == companyId
+                && u.Id != userId
+                && u.IsActive
+                && u.RoleId == SystemRoles.AdminEmpresaRoleId);
+
+            if (otrosAdmins == 0)
+                return false;
+        }
+
+        user.RoleId = newRoleId;
+        user.DepartmentId = departmentId;
+
+        if (newRoleId != SystemRoles.SupervisorRoleId)
+            user.SupervisedDepartments.Clear();
+
+        await _context.SaveChangesAsync();
+        await tx.CommitAsync();
+        return true;
+    }
+
+    public async Task UpdateDepartmentAsync(int userId, int departmentId)
+    {
+        var user = await _context.Users.FirstAsync(u => u.Id == userId);
+        user.DepartmentId = departmentId;
+        await _context.SaveChangesAsync();
     }
 }

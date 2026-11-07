@@ -87,6 +87,42 @@ namespace KnovaHub.InfrastructureLayer.Migrations
                         });
                 });
 
+            modelBuilder.Entity("KnovaHub.DomainLayer.Entities.Department", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Departments_CompanyId_Name");
+
+                    b.ToTable("Departments", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Departments_Name", "LEN(LTRIM(RTRIM([Name]))) > 0");
+                        });
+                });
+
             modelBuilder.Entity("KnovaHub.DomainLayer.Entities.Role", b =>
                 {
                     b.Property<int>("Id")
@@ -109,18 +145,38 @@ namespace KnovaHub.InfrastructureLayer.Migrations
                         new
                         {
                             Id = 1,
-                            Name = "Admin"
+                            Name = "AdminEmpresa"
                         },
                         new
                         {
                             Id = 2,
-                            Name = "Editor"
+                            Name = "Supervisor"
                         },
                         new
                         {
                             Id = 3,
-                            Name = "User"
+                            Name = "Usuario"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "AdminPlataforma"
                         });
+                });
+
+            modelBuilder.Entity("KnovaHub.DomainLayer.Entities.SupervisorDepartment", b =>
+                {
+                    b.Property<int>("SupervisorId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("int");
+
+                    b.HasKey("SupervisorId", "DepartmentId");
+
+                    b.HasIndex("DepartmentId");
+
+                    b.ToTable("SupervisorDepartments", (string)null);
                 });
 
             modelBuilder.Entity("KnovaHub.DomainLayer.Entities.User", b =>
@@ -131,13 +187,16 @@ namespace KnovaHub.InfrastructureLayer.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CompanyId")
+                    b.Property<int?>("CompanyId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int?>("DepartmentId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -164,6 +223,8 @@ namespace KnovaHub.InfrastructureLayer.Migrations
 
                     b.HasIndex("CompanyId");
 
+                    b.HasIndex("DepartmentId");
+
                     b.HasIndex("Email")
                         .IsUnique()
                         .HasDatabaseName("IX_Users_Email");
@@ -172,10 +233,42 @@ namespace KnovaHub.InfrastructureLayer.Migrations
 
                     b.ToTable("Users", null, t =>
                         {
+                            t.HasCheckConstraint("CK_Users_CompanyId_Role", "[CompanyId] IS NOT NULL OR [RoleId] = 4");
+
                             t.HasCheckConstraint("CK_Users_Email", "[Email] LIKE '%_@_%._%'");
 
                             t.HasCheckConstraint("CK_Users_FullName", "LEN(LTRIM(RTRIM([FullName]))) > 0");
                         });
+                });
+
+            modelBuilder.Entity("KnovaHub.DomainLayer.Entities.Department", b =>
+                {
+                    b.HasOne("KnovaHub.DomainLayer.Entities.Company", "Company")
+                        .WithMany("Departments")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+                });
+
+            modelBuilder.Entity("KnovaHub.DomainLayer.Entities.SupervisorDepartment", b =>
+                {
+                    b.HasOne("KnovaHub.DomainLayer.Entities.Department", "Department")
+                        .WithMany("Supervisors")
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("KnovaHub.DomainLayer.Entities.User", "Supervisor")
+                        .WithMany("SupervisedDepartments")
+                        .HasForeignKey("SupervisorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Department");
+
+                    b.Navigation("Supervisor");
                 });
 
             modelBuilder.Entity("KnovaHub.DomainLayer.Entities.User", b =>
@@ -183,8 +276,12 @@ namespace KnovaHub.InfrastructureLayer.Migrations
                     b.HasOne("KnovaHub.DomainLayer.Entities.Company", "Company")
                         .WithMany("Users")
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("KnovaHub.DomainLayer.Entities.Department", "Department")
+                        .WithMany("Members")
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("KnovaHub.DomainLayer.Entities.Role", "Role")
                         .WithMany("Users")
@@ -194,17 +291,33 @@ namespace KnovaHub.InfrastructureLayer.Migrations
 
                     b.Navigation("Company");
 
+                    b.Navigation("Department");
+
                     b.Navigation("Role");
                 });
 
             modelBuilder.Entity("KnovaHub.DomainLayer.Entities.Company", b =>
                 {
+                    b.Navigation("Departments");
+
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("KnovaHub.DomainLayer.Entities.Department", b =>
+                {
+                    b.Navigation("Members");
+
+                    b.Navigation("Supervisors");
                 });
 
             modelBuilder.Entity("KnovaHub.DomainLayer.Entities.Role", b =>
                 {
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("KnovaHub.DomainLayer.Entities.User", b =>
+                {
+                    b.Navigation("SupervisedDepartments");
                 });
 #pragma warning restore 612, 618
         }

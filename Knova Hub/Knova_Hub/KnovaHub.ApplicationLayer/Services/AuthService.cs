@@ -42,13 +42,13 @@ public class AuthService : IAuthService
             Address = dto.Address.Trim()
         };
 
-        // El contacto principal queda como Admin de la empresa.
+        // El contacto principal queda como AdminEmpresa de la empresa.
         var admin = new User
         {
             FullName = dto.ContactName.Trim(),
             Email = email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-            RoleId = SystemRoles.AdminRoleId
+            RoleId = SystemRoles.AdminEmpresaRoleId
         };
 
         // El resto de validaciones (RNC y correo únicos, formatos, campos obligatorios) las hace la base de datos.
@@ -62,14 +62,22 @@ public class AuthService : IAuthService
 
         if (user is null
             || !user.IsActive
-            || user.Company is null
-            || !user.Company.IsActive
+            || !HasValidCompany(user)
             || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
         {
             throw new InvalidCredentialsException();
         }
 
         return BuildResponse(user);
+    }
+
+    // El AdminPlataforma puede no tener empresa; el resto necesita una empresa activa.
+    private static bool HasValidCompany(User user)
+    {
+        if (user.Company is null)
+            return user.CompanyId is null && user.RoleId == SystemRoles.AdminPlataformaRoleId;
+
+        return user.Company.IsActive;
     }
 
     private static bool IsStrongPassword(string password)
@@ -82,18 +90,21 @@ public class AuthService : IAuthService
     private AuthResponseDto BuildResponse(User user)
     {
         var expiresAt = DateTime.UtcNow.AddMinutes(_jwt.ExpiresMinutes);
-        var role = user.Role?.Name ?? SystemRoles.UserRoleName;
+        var role = user.Role?.Name ?? SystemRoles.UsuarioRoleName;
         var companyName = user.Company?.Name ?? string.Empty;
         var rnc = user.Company?.Rnc ?? string.Empty;
 
-        var claims = new[]
+        var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.FullName),
-            new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.Role, role),
-            new Claim("companyId", user.CompanyId.ToString())
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new(ClaimTypes.Name, user.FullName),
+            new(ClaimTypes.Email, user.Email),
+            new(ClaimTypes.Role, role)
         };
+
+        // El AdminPlataforma sin empresa no lleva el claim companyId.
+        if (user.CompanyId is int companyId)
+            claims.Add(new Claim(KnovaClaims.CompanyId, companyId.ToString()));
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.Key));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

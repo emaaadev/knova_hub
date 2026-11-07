@@ -23,3 +23,19 @@ public class InvalidCredentialsException : Exception
     {
     }
 }
+
+/// <summary>El recurso no existe o no pertenece a la empresa del usuario (404).</summary>
+public class NotFoundException : Exception
+{
+    public NotFoundException(string message) : base(message)
+    {
+    }
+}
+
+/// <summary>La operación rompe una regla de negocio, p. ej. dejar una empresa sin AdminEmpresa (409).</summary>
+public class BusinessRuleException : Exception
+{
+    public BusinessRuleException(string message) : base(message)
+    {
+    }
+}

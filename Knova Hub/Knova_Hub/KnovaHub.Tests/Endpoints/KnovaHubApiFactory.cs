@@ -1,4 +1,5 @@
 using KnovaHub.ApplicationLayer.Contract;
+using KnovaHub.DomainLayer.Repository;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -9,12 +10,25 @@ using Moq;
 namespace KnovaHub.Tests.Endpoints;
 
 /// <summary>
-/// Levanta la API en memoria con IAuthService simulado, para probar los endpoints
-/// sin depender de SQL Server.
+/// Levanta la API en memoria con los servicios simulados, para probar los endpoints
+/// y las políticas de autorización sin depender de SQL Server.
 /// </summary>
 public class KnovaHubApiFactory : WebApplicationFactory<Program>
 {
     public Mock<IAuthService> AuthService { get; } = new();
+    public Mock<IDepartmentService> DepartmentService { get; } = new();
+    public Mock<IUserRoleService> UserRoleService { get; } = new();
+
+    /// <summary>Lo usa el handler de la política AccesoDepartamento.</summary>
+    public Mock<IDepartmentRepository> DepartmentRepository { get; } = new();
+
+    public void ResetMocks()
+    {
+        AuthService.Reset();
+        DepartmentService.Reset();
+        UserRoleService.Reset();
+        DepartmentRepository.Reset();
+    }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -25,6 +39,15 @@ public class KnovaHubApiFactory : WebApplicationFactory<Program>
         {
             services.RemoveAll<IAuthService>();
             services.AddSingleton(AuthService.Object);
+
+            services.RemoveAll<IDepartmentService>();
+            services.AddSingleton(DepartmentService.Object);
+
+            services.RemoveAll<IUserRoleService>();
+            services.AddSingleton(UserRoleService.Object);
+
+            services.RemoveAll<IDepartmentRepository>();
+            services.AddSingleton(DepartmentRepository.Object);
         });
     }
 }

@@ -20,7 +20,7 @@ document.getElementById("company-email").textContent = user.email || "";
 document.getElementById("company-phone").textContent = user.phone || "—";
 document.getElementById("company-address").textContent = user.address || "—";
 
-if (user.role === "Admin") {
+if (user.role === "AdminEmpresa") {
     document.getElementById("nav-usuarios").hidden = false;
 }
 

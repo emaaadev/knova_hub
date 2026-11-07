@@ -50,7 +50,7 @@ public class AuthEndpointTests
         Token = "token-de-prueba",
         UserId = 10,
         Email = "contacto@empresa.com",
-        Role = "Admin",
+        Role = "AdminEmpresa",
         CompanyId = 5,
         CompanyName = "Empresa de Prueba SRL",
         Rnc = "131234567"
@@ -247,7 +247,7 @@ public class AuthEndpointTests
             Assert.That(respuesta.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             Assert.That(cuerpo.GetProperty("userId").GetString(), Is.EqualTo("10"));
             Assert.That(cuerpo.GetProperty("email").GetString(), Is.EqualTo("contacto@empresa.com"));
-            Assert.That(cuerpo.GetProperty("role").GetString(), Is.EqualTo("Admin"));
+            Assert.That(cuerpo.GetProperty("role").GetString(), Is.EqualTo("AdminEmpresa"));
             Assert.That(cuerpo.GetProperty("companyId").GetString(), Is.EqualTo("5"));
         });
     }
