@@ -1,11 +1,11 @@
-using KnovaHub.InfrastructureLayer.Exceptions;
+using KnovaHub.DomainLayer.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace KnovaHub.API.Filters;
 
 /// <summary>
-/// Convierte las excepciones de negocio en respuestas HTTP con { message } (y { field } en duplicados).
+/// Convierte las excepciones de negocio en respuestas HTTP con { message } (y { field } cuando se sabe qué campo falló).
 /// </summary>
 public class KnovaExceptionFilter : IExceptionFilter
 {
@@ -16,6 +16,7 @@ public class KnovaExceptionFilter : IExceptionFilter
             NotFoundException ex => new NotFoundObjectResult(new { message = ex.Message }),
             BusinessRuleException ex => new ConflictObjectResult(new { message = ex.Message }),
             DuplicateEntityException ex => new ConflictObjectResult(new { field = ex.Field, message = ex.Message }),
+            DataValidationException { Field: not null } ex => new BadRequestObjectResult(new { field = ex.Field, message = ex.Message }),
             DataValidationException ex => new BadRequestObjectResult(new { message = ex.Message }),
             _ => null
         };

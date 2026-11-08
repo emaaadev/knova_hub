@@ -7,6 +7,9 @@ public class RegisterRequestDto
     public string Email { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
+    public string Sector { get; set; } = string.Empty;
+    public string Activity { get; set; } = string.Empty;
+
     public string ContactName { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
     public string ConfirmPassword { get; set; } = string.Empty;

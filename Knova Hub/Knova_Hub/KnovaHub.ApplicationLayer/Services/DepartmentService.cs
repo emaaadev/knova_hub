@@ -2,7 +2,7 @@ using KnovaHub.ApplicationLayer.Contract;
 using KnovaHub.ApplicationLayer.DTOs;
 using KnovaHub.DomainLayer.Entities;
 using KnovaHub.DomainLayer.Repository;
-using KnovaHub.InfrastructureLayer.Exceptions;
+using KnovaHub.DomainLayer.Exceptions;
 
 namespace KnovaHub.ApplicationLayer.Services;
 

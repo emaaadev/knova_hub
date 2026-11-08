@@ -20,6 +20,9 @@ builder.Services.AddDbContext<KnovaHubDbContext>(options =>
 // JWT
 var jwt = builder.Configuration.GetSection("Jwt").Get<JwtSettings>()
     ?? throw new InvalidOperationException("Falta la sección 'Jwt' en appsettings.json");
+if (string.IsNullOrWhiteSpace(jwt.Key) || jwt.Key.Length < 32)
+    throw new InvalidOperationException(
+        "Falta la clave JWT (Jwt:Key) o es muy corta (mínimo 32 caracteres). Configúrala con User Secrets, ver README.");
 builder.Services.AddSingleton(jwt);
 
 // Inyección de dependencias

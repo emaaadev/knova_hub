@@ -1,4 +1,4 @@
-﻿namespace KnovaHub.InfrastructureLayer.Exceptions;
+﻿namespace KnovaHub.DomainLayer.Exceptions;
 
 public class DuplicateEntityException : Exception
 {
@@ -12,8 +12,17 @@ public class DuplicateEntityException : Exception
 
 public class DataValidationException : Exception
 {
+    public string? Field { get; }
+
+    
     public DataValidationException(string message) : base(message)
     {
+    }
+
+    // permite identificar el campo.
+    public DataValidationException(string field, string message) : base(message)
+    {
+        Field = field;
     }
 }
 

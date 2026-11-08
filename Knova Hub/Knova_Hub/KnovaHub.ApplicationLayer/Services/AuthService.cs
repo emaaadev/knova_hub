@@ -1,12 +1,15 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using KnovaHub.ApplicationLayer.Contract;
 using KnovaHub.ApplicationLayer.DTOs;
 using KnovaHub.DomainLayer.Entities;
 using KnovaHub.DomainLayer.Repository;
-using KnovaHub.InfrastructureLayer.Exceptions;
+using KnovaHub.DomainLayer.Exceptions;
 using Microsoft.IdentityModel.Tokens;
+using KnovaHub.DomainLayer.Constants;
 
 namespace KnovaHub.ApplicationLayer.Services;
 
@@ -31,15 +34,57 @@ public class AuthService : IAuthService
             throw new DataValidationException(
                 "La contraseña debe tener mínimo 8 caracteres, al menos un número y un carácter especial.");
 
+        var rnc = dto.Rnc.Trim();
         var email = dto.Email.Trim().ToLowerInvariant();
+
+        if (!IsValidRnc(rnc))
+            throw new DataValidationException(
+                "rnc",
+                "El RNC debe contener exactamente 9 dígitos.");
+
+        if (!IsValidEmail(email))
+            throw new DataValidationException(
+                "email",
+                "El correo electrónico debe tener un formato válido.");
+
+        var sector = CompanySectors.All.FirstOrDefault(s =>
+            string.Equals(s, dto.Sector?.Trim(), StringComparison.OrdinalIgnoreCase));
+
+        if (sector is null)
+        {
+            throw new DataValidationException(
+                "sector",
+                "Debe seleccionar un sector válido."
+            );
+        }
+
+        var activity = dto.Activity?.Trim();
+
+        if (string.IsNullOrWhiteSpace(activity))
+        {
+            throw new DataValidationException(
+                "activity",
+                "La actividad de la empresa es obligatoria."
+            );
+        }
+
+        if (activity.Length > 250)
+        {
+            throw new DataValidationException(
+                "activity",
+                "La actividad no puede superar los 250 caracteres."
+            );
+        }
 
         var company = new Company
         {
-            Rnc = dto.Rnc.Trim(),
+            Rnc = rnc,
             Name = dto.CompanyName.Trim(),
             Email = email,
             Phone = dto.Phone.Trim(),
-            Address = dto.Address.Trim()
+            Address = dto.Address.Trim(),
+            Sector = sector,
+            Activity = activity
         };
 
         // El contacto principal queda como AdminEmpresa de la empresa.
@@ -51,10 +96,20 @@ public class AuthService : IAuthService
             RoleId = SystemRoles.AdminEmpresaRoleId
         };
 
-        // El resto de validaciones (RNC y correo únicos, formatos, campos obligatorios) las hace la base de datos.
         var created = await _users.RegisterCompanyAsync(company, admin);
         return BuildResponse(created);
     }
+
+    private static bool IsValidRnc(string rnc)
+    {
+        return Regex.IsMatch(rnc, @"^\d{9}$");
+    }
+
+    private static bool IsValidEmail(string email)
+    {
+        return new EmailAddressAttribute().IsValid(email);
+    }
+
 
     public async Task<AuthResponseDto> LoginAsync(LoginRequestDto dto)
     {
@@ -93,6 +148,8 @@ public class AuthService : IAuthService
         var role = user.Role?.Name ?? SystemRoles.UsuarioRoleName;
         var companyName = user.Company?.Name ?? string.Empty;
         var rnc = user.Company?.Rnc ?? string.Empty;
+        var sector = user.Company?.Sector ?? string.Empty;
+        var activity = user.Company?.Activity ?? string.Empty;
 
         var claims = new List<Claim>
         {
@@ -126,7 +183,9 @@ public class AuthService : IAuthService
             Role = role,
             CompanyId = user.CompanyId,
             CompanyName = companyName,
-            Rnc = rnc
+            Rnc = rnc,
+            Sector = sector,
+            Activity = activity
         };
     }
 }

@@ -35,6 +35,9 @@ public class KnovaHubApiFactory : WebApplicationFactory<Program>
         // Fuera de "Development" la API no ejecuta las migraciones contra SQL Server al arrancar.
         builder.UseEnvironment("Testing");
 
+        // La clave JWT ya no está en appsettings.json. Esta es solo para pruebas (no es un secreto real).
+        builder.UseSetting("Jwt:Key", "clave-solo-para-pruebas-1234567890-abcdef");
+
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<IAuthService>();

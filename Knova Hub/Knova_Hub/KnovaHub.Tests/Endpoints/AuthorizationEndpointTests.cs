@@ -5,7 +5,7 @@ using System.Text.Json;
 using KnovaHub.ApplicationLayer.DTOs;
 using KnovaHub.ApplicationLayer.Services;
 using KnovaHub.DomainLayer.Entities;
-using KnovaHub.InfrastructureLayer.Exceptions;
+using KnovaHub.DomainLayer.Exceptions;
 using KnovaHub.Tests.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -180,6 +180,24 @@ public class AuthorizationEndpointTests
         {
             Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.Created));
             Assert.That(r.Headers.Location?.ToString(), Does.EndWith("/api/departments/50"));
+        });
+    }
+
+    [Test]
+    public async Task CrearDepartamento_ValidacionConCampo_Devuelve400ConCampo()
+    {
+        _factory.DepartmentService.Setup(s => s.CreateAsync(Empresa, It.IsAny<CreateDepartmentDto>()))
+            .ThrowsAsync(new DataValidationException("name", "Nombre no válido."));
+        ComoAdmin();
+
+        var r = await _client.PostAsJsonAsync("/api/departments", new CreateDepartmentDto { Name = "X" });
+        var cuerpo = await r.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+            Assert.That(cuerpo.GetProperty("field").GetString(), Is.EqualTo("name"));
+            Assert.That(cuerpo.GetProperty("message").GetString(), Is.EqualTo("Nombre no válido."));
         });
     }
 

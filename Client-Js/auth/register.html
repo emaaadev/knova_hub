@@ -88,6 +88,38 @@
                     </div>
 
                     <div class="field">
+    <label for="sector">Sector empresarial <span class="req">*</span></label>
+    <select id="sector" name="sector" required>
+        <option value="" disabled selected>Selecciona un sector</option>
+        <option value="Agricultura y ganadería">Agricultura y ganadería</option>
+        <option value="Comercio">Comercio</option>
+        <option value="Construcción e inmobiliaria">Construcción e inmobiliaria</option>
+        <option value="Educación">Educación</option>
+        <option value="Energía y servicios públicos">Energía y servicios públicos</option>
+        <option value="Finanzas y seguros">Finanzas y seguros</option>
+        <option value="Industria y manufactura">Industria y manufactura</option>
+        <option value="Salud">Salud</option>
+        <option value="Tecnología y telecomunicaciones">Tecnología y telecomunicaciones</option>
+        <option value="Transporte y logística">Transporte y logística</option>
+        <option value="Turismo, hotelería y gastronomía">Turismo, hotelería y gastronomía</option>
+        <option value="Servicios profesionales">Servicios profesionales</option>
+        <option value="Medios y entretenimiento">Medios y entretenimiento</option>
+        <option value="Otros">Otros</option>
+    </select>
+</div>
+
+                    <div class="field">
+    <label for="actividad">Actividad de la empresa <span class="req">*</span></label>
+    <textarea
+        id="actividad"
+        name="actividad"
+        rows="2"
+        maxlength="250"
+        placeholder="Describe brevemente a qué se dedica tu empresa"
+        required></textarea>
+</div>
+
+                    <div class="field">
                         <label for="email">Email corporativo <span class="req">*</span></label>
                         <input
                             type="email"

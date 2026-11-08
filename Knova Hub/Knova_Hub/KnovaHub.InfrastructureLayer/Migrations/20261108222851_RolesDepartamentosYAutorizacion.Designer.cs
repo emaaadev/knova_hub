@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace KnovaHub.InfrastructureLayer.Migrations
 {
     [DbContext(typeof(KnovaHubDbContext))]
-    [Migration("20261107222814_RolesDepartamentosYAutorizacion")]
+    [Migration("20261108222851_RolesDepartamentosYAutorizacion")]
     partial class RolesDepartamentosYAutorizacion
     {
         /// <inheritdoc />
@@ -32,6 +32,11 @@ namespace KnovaHub.InfrastructureLayer.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Activity")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("Address")
                         .IsRequired()
@@ -66,6 +71,11 @@ namespace KnovaHub.InfrastructureLayer.Migrations
                         .HasMaxLength(11)
                         .HasColumnType("nvarchar(11)");
 
+                    b.Property<string>("Sector")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
@@ -78,6 +88,8 @@ namespace KnovaHub.InfrastructureLayer.Migrations
 
                     b.ToTable("Companies", null, t =>
                         {
+                            t.HasCheckConstraint("CK_Companies_Activity", "LEN(LTRIM(RTRIM([Activity]))) > 0");
+
                             t.HasCheckConstraint("CK_Companies_Address", "LEN(LTRIM(RTRIM([Address]))) > 0");
 
                             t.HasCheckConstraint("CK_Companies_Email", "[Email] LIKE '%_@_%._%'");
@@ -87,6 +99,8 @@ namespace KnovaHub.InfrastructureLayer.Migrations
                             t.HasCheckConstraint("CK_Companies_Phone", "LEN(LTRIM(RTRIM([Phone]))) >= 7 AND [Phone] NOT LIKE '%[^0-9+() -]%'");
 
                             t.HasCheckConstraint("CK_Companies_Rnc", "LEN([Rnc]) IN (9, 11) AND [Rnc] NOT LIKE '%[^0-9]%'");
+
+                            t.HasCheckConstraint("CK_Companies_Sector", "[Sector] IN (N'Agricultura y ganadería', N'Comercio', N'Construcción e inmobiliaria', N'Educación', N'Energía y servicios públicos', N'Finanzas y seguros', N'Industria y manufactura', N'Salud', N'Tecnología y telecomunicaciones', N'Transporte y logística', N'Turismo, hotelería y gastronomía', N'Servicios profesionales', N'Medios y entretenimiento', N'Otros')");
                         });
                 });
 

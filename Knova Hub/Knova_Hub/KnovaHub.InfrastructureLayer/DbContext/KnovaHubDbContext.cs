@@ -80,6 +80,13 @@ public class KnovaHubDbContext : DbContext
                 t.HasCheckConstraint("CK_Companies_Phone",
                     "LEN(LTRIM(RTRIM([Phone]))) >= 7 AND [Phone] NOT LIKE '%[^0-9+() -]%'");
                 t.HasCheckConstraint("CK_Companies_Address", "LEN(LTRIM(RTRIM([Address]))) > 0");
+                t.HasCheckConstraint(
+                  "CK_Companies_Sector",
+                  "[Sector] IN (N'Agricultura y ganadería', N'Comercio', N'Construcción e inmobiliaria', N'Educación', N'Energía y servicios públicos', N'Finanzas y seguros', N'Industria y manufactura', N'Salud', N'Tecnología y telecomunicaciones', N'Transporte y logística', N'Turismo, hotelería y gastronomía', N'Servicios profesionales', N'Medios y entretenimiento', N'Otros')");
+
+                t.HasCheckConstraint(
+                    "CK_Companies_Activity",
+                    "LEN(LTRIM(RTRIM([Activity]))) > 0");
             });
 
             e.HasKey(c => c.Id);
@@ -88,6 +95,8 @@ public class KnovaHubDbContext : DbContext
             e.Property(c => c.Email).IsRequired().HasMaxLength(150);
             e.Property(c => c.Phone).IsRequired().HasMaxLength(20);
             e.Property(c => c.Address).IsRequired().HasMaxLength(250);
+            e.Property(c => c.Sector).IsRequired().HasMaxLength(100);
+            e.Property(c => c.Activity).IsRequired().HasMaxLength(250);
             e.Property(c => c.IsActive).IsRequired();
             e.Property(c => c.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
 

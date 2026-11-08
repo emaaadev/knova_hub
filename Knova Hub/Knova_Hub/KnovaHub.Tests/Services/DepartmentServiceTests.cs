@@ -2,7 +2,7 @@ using KnovaHub.ApplicationLayer.DTOs;
 using KnovaHub.ApplicationLayer.Services;
 using KnovaHub.DomainLayer.Entities;
 using KnovaHub.DomainLayer.Repository;
-using KnovaHub.InfrastructureLayer.Exceptions;
+using KnovaHub.DomainLayer.Exceptions;
 using KnovaHub.Tests.Helpers;
 using Moq;
 
