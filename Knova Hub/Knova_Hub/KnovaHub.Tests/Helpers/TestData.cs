@@ -31,6 +31,8 @@ public static class TestData
         Phone = "809-555-1234",
         Address = "Av. Principal #1, Santo Domingo",
         ContactName = "Juan Pérez",
+        Sector = "Comercio",
+        Activity = "Venta de productos comerciales",
         Password = PasswordValida,
         ConfirmPassword = PasswordValida
     };

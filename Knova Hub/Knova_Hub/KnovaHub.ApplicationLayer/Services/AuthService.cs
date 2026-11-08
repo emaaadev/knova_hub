@@ -9,6 +9,7 @@ using KnovaHub.DomainLayer.Entities;
 using KnovaHub.DomainLayer.Repository;
 using KnovaHub.DomainLayer.Exceptions;
 using Microsoft.IdentityModel.Tokens;
+using KnovaHub.DomainLayer.Constants;
 
 namespace KnovaHub.ApplicationLayer.Services;
 
@@ -46,13 +47,44 @@ public class AuthService : IAuthService
                 "email",
                 "El correo electrónico debe tener un formato válido.");
 
+        var sector = CompanySectors.All.FirstOrDefault(s =>
+            string.Equals(s, dto.Sector?.Trim(), StringComparison.OrdinalIgnoreCase));
+
+        if (sector is null)
+        {
+            throw new DataValidationException(
+                "sector",
+                "Debe seleccionar un sector válido."
+            );
+        }
+
+        var activity = dto.Activity?.Trim();
+
+        if (string.IsNullOrWhiteSpace(activity))
+        {
+            throw new DataValidationException(
+                "activity",
+                "La actividad de la empresa es obligatoria."
+            );
+        }
+
+        if (activity.Length > 250)
+        {
+            throw new DataValidationException(
+                "activity",
+                "La actividad no puede superar los 250 caracteres."
+            );
+        }
+
         var company = new Company
         {
             Rnc = rnc,
             Name = dto.CompanyName.Trim(),
             Email = email,
             Phone = dto.Phone.Trim(),
-            Address = dto.Address.Trim()
+            Address = dto.Address.Trim(),
+            Sector = sector,
+            Activity = activity
         };
 
         // El contacto principal queda como Admin de la empresa.
@@ -108,6 +140,8 @@ public class AuthService : IAuthService
         var role = user.Role?.Name ?? SystemRoles.UserRoleName;
         var companyName = user.Company?.Name ?? string.Empty;
         var rnc = user.Company?.Rnc ?? string.Empty;
+        var sector = user.Company?.Sector ?? string.Empty;
+        var activity = user.Company?.Activity ?? string.Empty;
 
         var claims = new[]
         {
@@ -138,7 +172,9 @@ public class AuthService : IAuthService
             Role = role,
             CompanyId = user.CompanyId,
             CompanyName = companyName,
-            Rnc = rnc
+            Rnc = rnc,
+            Sector = sector,
+            Activity = activity
         };
     }
 }
