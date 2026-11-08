@@ -1,7 +1,7 @@
 ﻿using KnovaHub.DomainLayer.Entities;
 using KnovaHub.DomainLayer.Repository;
 using KnovaHub.InfrastructureLayer.Data;
-using KnovaHub.InfrastructureLayer.Exceptions;
+using KnovaHub.DomainLayer.Exceptions;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 

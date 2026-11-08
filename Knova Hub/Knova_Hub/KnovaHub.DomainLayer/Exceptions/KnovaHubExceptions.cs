@@ -1,4 +1,4 @@
-﻿namespace KnovaHub.InfrastructureLayer.Exceptions;
+﻿namespace KnovaHub.DomainLayer.Exceptions;
 
 public class DuplicateEntityException : Exception
 {

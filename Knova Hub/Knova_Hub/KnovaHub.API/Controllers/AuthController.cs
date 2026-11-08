@@ -1,7 +1,7 @@
 ﻿using System.Security.Claims;
 using KnovaHub.ApplicationLayer.Contract;
 using KnovaHub.ApplicationLayer.DTOs;
-using KnovaHub.InfrastructureLayer.Exceptions;
+using KnovaHub.DomainLayer.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
