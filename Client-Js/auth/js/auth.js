@@ -61,12 +61,15 @@ if (registerForm) {
 
         const rnc = registerForm.rnc.value.trim();
         const nombre = registerForm.nombre.value.trim();
+        const sector = registerForm.sector.value;
+        const activity = registerForm.actividad.value.trim();
         const email = registerForm.email.value.trim();
         const telefono = registerForm.telefono.value.trim();
         const direccion = registerForm.direccion.value.trim();
         const contacto = registerForm.contacto.value.trim();
         const password = registerForm.password.value;
         const confirmar = registerForm.confirmar.value;
+        
 
         let valid = true;
 
@@ -76,6 +79,20 @@ if (registerForm) {
         }
         if (!nombre) {
             showError(registerForm.nombre, "El nombre de la empresa es obligatorio.");
+            valid = false;
+        }
+        if (!sector) {
+            showError(registerForm.sector, "Debes seleccionar un sector.");
+            valid = false;
+        }
+
+        if (!activity) {
+            showError(registerForm.actividad, "La actividad de la empresa es obligatoria.");
+            valid = false;
+        }
+
+        if (activity.length > 250) {
+            showError(registerForm.actividad, "La actividad no puede superar los 250 caracteres.");
             valid = false;
         }
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
@@ -116,7 +133,9 @@ if (registerForm) {
                     companyName: nombre,
                     email,
                     phone: telefono,
-                    address: direccion,
+                    address: direccion, 
+                    sector: sector,
+                    activity: activity,
                     contactName: contacto,
                     password,
                     confirmPassword: confirmar
@@ -132,6 +151,10 @@ if (registerForm) {
                 showError(registerForm.rnc, data.message);
             } else if (response.status === 409 && data.field === "email") {
                 showError(registerForm.email, data.message);
+                } else if (response.status === 400 && data.field === "sector") {
+                    showError(registerForm.sector, data.message);
+                } else if (response.status === 400 && data.field === "activity") {
+                    showError(registerForm.actividad, data.message);
             } else {
                 showMessage(registerForm, data.message || "No se pudo registrar la empresa.", true);
             }
