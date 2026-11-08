@@ -122,4 +122,50 @@ public class AuthServiceRegisterTests
 
         Assert.That(ex!.Field, Is.EqualTo("rnc"));
     }
+
+    [TestCase("12345", TestName = "Register_RncConMenosDe9Digitos_Rechazado")]
+    [TestCase("1234567890", TestName = "Register_RncConMasDe9Digitos_Rechazado")]
+    [TestCase("ABC123456", TestName = "Register_RncConLetras_Rechazado")]
+    [TestCase("12345678A", TestName = "Register_RncConCaracterEspecial_Rechazado")]
+    public void Register_RncInvalido_LanzaDataValidationException(string rnc)
+    {
+        var dto = TestData.RegistroValido();
+        dto.Rnc = rnc;
+
+        var ex = Assert.ThrowsAsync<DataValidationException>(
+            () => _service.RegisterAsync(dto));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(ex!.Field, Is.EqualTo("rnc"));
+            Assert.That(ex.Message, Does.Contain("9 dígitos"));
+        });
+
+        _repo.Verify(
+            r => r.RegisterCompanyAsync(It.IsAny<Company>(), It.IsAny<User>()),
+            Times.Never);
+    }
+
+    [TestCase("correo-invalido", TestName = "Register_EmailSinArroba_Rechazado")]
+    [TestCase("correo@", TestName = "Register_EmailSinDominio_Rechazado")]
+    [TestCase("@empresa.com", TestName = "Register_EmailSinUsuario_Rechazado")]
+    public void Register_EmailInvalido_LanzaDataValidationException(string email)
+    {
+        var dto = TestData.RegistroValido();
+        dto.Email = email;
+
+        var ex = Assert.ThrowsAsync<DataValidationException>(
+            () => _service.RegisterAsync(dto));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(ex!.Field, Is.EqualTo("email"));
+            Assert.That(ex.Message, Does.Contain("formato válido"));
+        });
+
+        _repo.Verify(
+            r => r.RegisterCompanyAsync(It.IsAny<Company>(), It.IsAny<User>()),
+            Times.Never);
+    }
+
 }

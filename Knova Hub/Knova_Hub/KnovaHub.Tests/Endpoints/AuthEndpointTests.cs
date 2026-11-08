@@ -133,6 +133,53 @@ public class AuthEndpointTests
     }
 
     [Test]
+    public async Task Register_RncInvalido_Devuelve400ConCampoYMensaje()
+    {
+        _factory.AuthService.Setup(s => s.RegisterAsync(It.IsAny<RegisterRequestDto>()))
+            .ThrowsAsync(new DataValidationException(
+                "rnc",
+                "El RNC debe contener exactamente 9 dígitos."));
+
+        var respuesta = await _client.PostAsJsonAsync(
+            "/api/auth/register",
+            TestData.RegistroValido());
+
+        var cuerpo = await LeerJson(respuesta);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(respuesta.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+            Assert.That(cuerpo.GetProperty("field").GetString(), Is.EqualTo("rnc"));
+            Assert.That(cuerpo.GetProperty("message").GetString(),
+                Is.EqualTo("El RNC debe contener exactamente 9 dígitos."));
+        });
+    }
+
+    [Test]
+    public async Task Register_EmailInvalido_Devuelve400ConCampoYMensaje()
+    {
+        _factory.AuthService.Setup(s => s.RegisterAsync(It.IsAny<RegisterRequestDto>()))
+            .ThrowsAsync(new DataValidationException(
+                "email",
+                "El correo electrónico no tiene un formato válido."));
+
+        var respuesta = await _client.PostAsJsonAsync(
+            "/api/auth/register",
+            TestData.RegistroValido());
+
+        var cuerpo = await LeerJson(respuesta);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(respuesta.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+            Assert.That(cuerpo.GetProperty("field").GetString(), Is.EqualTo("email"));
+            Assert.That(cuerpo.GetProperty("message").GetString(),
+                Is.EqualTo("El correo electrónico no tiene un formato válido."));
+        });
+    }
+
+
+    [Test]
     public async Task Register_JsonMalFormado_Devuelve400SinLlamarAlServicio()
     {
         var respuesta = await _client.PostAsync("/api/auth/register", JsonCrudo("{ esto no es json"));

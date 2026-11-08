@@ -32,7 +32,14 @@ public class AuthController : ControllerBase
         }
         catch (DataValidationException ex)
         {
-            return BadRequest(new { message = ex.Message });
+            if (ex.Field is null)
+                return BadRequest(new { message = ex.Message });
+
+            return BadRequest(new
+            {
+                field = ex.Field,
+                message = ex.Message
+            });
         }
     }
 

@@ -1,4 +1,6 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using KnovaHub.ApplicationLayer.Contract;
@@ -31,11 +33,22 @@ public class AuthService : IAuthService
             throw new DataValidationException(
                 "La contraseña debe tener mínimo 8 caracteres, al menos un número y un carácter especial.");
 
+        var rnc = dto.Rnc.Trim();
         var email = dto.Email.Trim().ToLowerInvariant();
+
+        if (!IsValidRnc(rnc))
+            throw new DataValidationException(
+                "rnc",
+                "El RNC debe contener exactamente 9 dígitos.");
+
+        if (!IsValidEmail(email))
+            throw new DataValidationException(
+                "email",
+                "El correo electrónico debe tener un formato válido.");
 
         var company = new Company
         {
-            Rnc = dto.Rnc.Trim(),
+            Rnc = rnc,
             Name = dto.CompanyName.Trim(),
             Email = email,
             Phone = dto.Phone.Trim(),
@@ -51,10 +64,20 @@ public class AuthService : IAuthService
             RoleId = SystemRoles.AdminRoleId
         };
 
-        // El resto de validaciones (RNC y correo únicos, formatos, campos obligatorios) las hace la base de datos.
         var created = await _users.RegisterCompanyAsync(company, admin);
         return BuildResponse(created);
     }
+
+    private static bool IsValidRnc(string rnc)
+    {
+        return Regex.IsMatch(rnc, @"^\d{9}$");
+    }
+
+    private static bool IsValidEmail(string email)
+    {
+        return new EmailAddressAttribute().IsValid(email);
+    }
+
 
     public async Task<AuthResponseDto> LoginAsync(LoginRequestDto dto)
     {
