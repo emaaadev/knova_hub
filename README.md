@@ -26,3 +26,27 @@ A continuación, se detalla la estructura principal del repositorio:
 ├── 📁 KnovaHub.ApplicationLayer     # Backend: Capa de Aplicación
 ├── 📁 KnovaHub.DomainLayer          # Backend: Capa de Dominio (Núcleo)
 └── 📁 KnovaHub.InfrastructureLayer  # Backend: Capa de Infraestructura
+```
+
+
+## Configuración local: clave JWT
+
+La clave para firmar los tokens **no está en el repositorio**. Cada desarrollador debe configurarla en su máquina con User Secrets.
+
+1. Genera una clave (mínimo 32 caracteres). En PowerShell:
+
+   ```powershell
+   $b = New-Object byte[] 48; [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); [Convert]::ToBase64String($b)
+   ```
+
+2. Guárdala:
+   - **Visual Studio:** clic derecho en `KnovaHub.API` > *Administrar secretos de usuario* y agrega `"Jwt:Key": "tu-clave"`.
+   - **Terminal**, desde la carpeta `KnovaHub.API`:
+
+     ```
+     dotnet user-secrets set "Jwt:Key" "tu-clave"
+     ```
+
+3. Ejecuta la API en modo desarrollo. Si la clave falta, la API no inicia y muestra un mensaje indicándolo.
+
+En producción, la clave se pasa con la variable de entorno `Jwt__Key`.
