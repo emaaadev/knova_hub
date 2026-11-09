@@ -9,7 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 namespace KnovaHub.Tests.Helpers;
 
 /// <summary>
-/// Datos de prueba reutilizables para los tests de autenticación.
+/// Datos de prueba reutilizables para los tests de autenticación y autorización.
 /// </summary>
 public static class TestData
 {
@@ -31,6 +31,8 @@ public static class TestData
         Phone = "809-555-1234",
         Address = "Av. Principal #1, Santo Domingo",
         ContactName = "Juan Pérez",
+        Sector = "Comercio",
+        Activity = "Venta de productos comerciales",
         Password = PasswordValida,
         ConfirmPassword = PasswordValida
     };
@@ -51,23 +53,43 @@ public static class TestData
             Email = "contacto@empresa.com",
             IsActive = true
         },
-        RoleId = SystemRoles.AdminRoleId,
-        Role = new Role { Id = SystemRoles.AdminRoleId, Name = SystemRoles.AdminRoleName }
+        RoleId = SystemRoles.AdminEmpresaRoleId,
+        Role = new Role { Id = SystemRoles.AdminEmpresaRoleId, Name = SystemRoles.AdminEmpresaRoleName }
+    };
+
+    public static User UsuarioDeEmpresa(int id, int roleId, int companyId = 5, int? departmentId = null) => new()
+    {
+        Id = id,
+        FullName = $"Usuario {id}",
+        Email = $"usuario{id}@empresa.com",
+        IsActive = true,
+        CompanyId = companyId,
+        RoleId = roleId,
+        DepartmentId = departmentId
     };
 
     /// <summary>
     /// Genera un JWT con los mismos claims que emite AuthService, para probar endpoints protegidos.
+    /// Por defecto es el AdminEmpresa 10 de la empresa 5. companyId = null simula un AdminPlataforma sin empresa.
     /// </summary>
-    public static string GenerarToken(JwtSettings jwt, DateTime expira, string? claveFirma = null)
+    public static string GenerarToken(
+        JwtSettings jwt,
+        DateTime expira,
+        string? claveFirma = null,
+        string rol = SystemRoles.AdminEmpresaRoleName,
+        int userId = 10,
+        int? companyId = 5)
     {
-        var claims = new[]
+        var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.NameIdentifier, "10"),
-            new Claim(ClaimTypes.Name, "Juan Pérez"),
-            new Claim(ClaimTypes.Email, "contacto@empresa.com"),
-            new Claim(ClaimTypes.Role, SystemRoles.AdminRoleName),
-            new Claim("companyId", "5")
+            new(ClaimTypes.NameIdentifier, userId.ToString()),
+            new(ClaimTypes.Name, "Juan Pérez"),
+            new(ClaimTypes.Email, "contacto@empresa.com"),
+            new(ClaimTypes.Role, rol)
         };
+
+        if (companyId is int c)
+            claims.Add(new Claim(KnovaClaims.CompanyId, c.ToString()));
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(claveFirma ?? jwt.Key));
 

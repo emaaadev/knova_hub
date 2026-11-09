@@ -3,8 +3,8 @@ using System.Security.Claims;
 using KnovaHub.ApplicationLayer.DTOs;
 using KnovaHub.ApplicationLayer.Services;
 using KnovaHub.DomainLayer.Entities;
+using KnovaHub.DomainLayer.Exceptions;
 using KnovaHub.DomainLayer.Repository;
-using KnovaHub.InfrastructureLayer.Exceptions;
 using KnovaHub.Tests.Helpers;
 using Moq;
 
@@ -108,7 +108,7 @@ public class AuthServiceLoginTests
             Assert.That(respuesta.Token, Is.Not.Empty);
             Assert.That(respuesta.UserId, Is.EqualTo(10));
             Assert.That(respuesta.CompanyId, Is.EqualTo(5));
-            Assert.That(respuesta.Role, Is.EqualTo(SystemRoles.AdminRoleName));
+            Assert.That(respuesta.Role, Is.EqualTo(SystemRoles.AdminEmpresaRoleName));
             Assert.That(respuesta.Rnc, Is.EqualTo("131234567"));
         });
         _repo.Verify(r => r.GetByEmailOrRncAsync(identificador), Times.Once);
@@ -128,7 +128,7 @@ public class AuthServiceLoginTests
             Assert.That(token.Audiences, Does.Contain(_jwt.Audience));
             Assert.That(token.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value, Is.EqualTo("10"));
             Assert.That(token.Claims.First(c => c.Type == ClaimTypes.Email).Value, Is.EqualTo("contacto@empresa.com"));
-            Assert.That(token.Claims.First(c => c.Type == ClaimTypes.Role).Value, Is.EqualTo(SystemRoles.AdminRoleName));
+            Assert.That(token.Claims.First(c => c.Type == ClaimTypes.Role).Value, Is.EqualTo(SystemRoles.AdminEmpresaRoleName));
             Assert.That(token.Claims.First(c => c.Type == "companyId").Value, Is.EqualTo("5"));
             Assert.That(respuesta.ExpiresAt,
                 Is.EqualTo(DateTime.UtcNow.AddMinutes(_jwt.ExpiresMinutes)).Within(TimeSpan.FromSeconds(10)));
@@ -136,7 +136,7 @@ public class AuthServiceLoginTests
     }
 
     [Test]
-    public async Task Login_UsuarioSinRolCargado_UsaRolUserPorDefecto()
+    public async Task Login_UsuarioSinRolCargado_UsaRolUsuarioPorDefecto()
     {
         var usuario = TestData.UsuarioAdmin(HashValido);
         usuario.Role = null;
@@ -144,6 +144,49 @@ public class AuthServiceLoginTests
 
         var respuesta = await _service.LoginAsync(Login());
 
-        Assert.That(respuesta.Role, Is.EqualTo(SystemRoles.UserRoleName));
+        Assert.That(respuesta.Role, Is.EqualTo(SystemRoles.UsuarioRoleName));
+    }
+
+    // ---------- AdminPlataforma (CompanyId opcional) ----------
+
+    private static User AdminPlataformaSinEmpresa(string hash) => new()
+    {
+        Id = 1,
+        FullName = "Admin Plataforma",
+        Email = "plataforma@knovahub.com",
+        PasswordHash = hash,
+        IsActive = true,
+        CompanyId = null,
+        Company = null,
+        RoleId = SystemRoles.AdminPlataformaRoleId,
+        Role = new Role { Id = SystemRoles.AdminPlataformaRoleId, Name = SystemRoles.AdminPlataformaRoleName }
+    };
+
+    [Test]
+    public async Task Login_AdminPlataformaSinEmpresa_EntraYElTokenNoLlevaCompanyId()
+    {
+        RepositorioDevuelve(AdminPlataformaSinEmpresa(HashValido));
+
+        var respuesta = await _service.LoginAsync(Login("plataforma@knovahub.com"));
+        var token = new JwtSecurityTokenHandler().ReadJwtToken(respuesta.Token);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(respuesta.Role, Is.EqualTo(SystemRoles.AdminPlataformaRoleName));
+            Assert.That(respuesta.CompanyId, Is.Null);
+            Assert.That(token.Claims.Any(c => c.Type == "companyId"), Is.False);
+        });
+    }
+
+    [TestCase(SystemRoles.AdminEmpresaRoleId, TestName = "Login_AdminEmpresaSinEmpresa_LanzaInvalidCredentials")]
+    [TestCase(SystemRoles.SupervisorRoleId, TestName = "Login_SupervisorSinEmpresa_LanzaInvalidCredentials")]
+    [TestCase(SystemRoles.UsuarioRoleId, TestName = "Login_UsuarioSinEmpresaNiCompanyId_LanzaInvalidCredentials")]
+    public void Login_RolDeEmpresaSinEmpresa_LanzaInvalidCredentials(int roleId)
+    {
+        var usuario = AdminPlataformaSinEmpresa(HashValido);
+        usuario.RoleId = roleId;
+        RepositorioDevuelve(usuario);
+
+        Assert.ThrowsAsync<InvalidCredentialsException>(() => _service.LoginAsync(Login()));
     }
 }

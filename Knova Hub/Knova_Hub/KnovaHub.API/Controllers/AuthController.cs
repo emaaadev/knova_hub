@@ -1,7 +1,7 @@
 ﻿using System.Security.Claims;
 using KnovaHub.ApplicationLayer.Contract;
 using KnovaHub.ApplicationLayer.DTOs;
-using KnovaHub.InfrastructureLayer.Exceptions;
+using KnovaHub.DomainLayer.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -32,7 +32,14 @@ public class AuthController : ControllerBase
         }
         catch (DataValidationException ex)
         {
-            return BadRequest(new { message = ex.Message });
+            if (ex.Field is null)
+                return BadRequest(new { message = ex.Message });
+
+            return BadRequest(new
+            {
+                field = ex.Field,
+                message = ex.Message
+            });
         }
     }
 

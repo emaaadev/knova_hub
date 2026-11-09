@@ -1,4 +1,6 @@
 using System.Text;
+using KnovaHub.API.Authorization;
+using KnovaHub.API.Filters;
 using KnovaHub.ApplicationLayer.Contract;
 using KnovaHub.ApplicationLayer.Services;
 using KnovaHub.DomainLayer.Repository;
@@ -18,11 +20,17 @@ builder.Services.AddDbContext<KnovaHubDbContext>(options =>
 // JWT
 var jwt = builder.Configuration.GetSection("Jwt").Get<JwtSettings>()
     ?? throw new InvalidOperationException("Falta la sección 'Jwt' en appsettings.json");
+if (string.IsNullOrWhiteSpace(jwt.Key) || jwt.Key.Length < 32)
+    throw new InvalidOperationException(
+        "Falta la clave JWT (Jwt:Key) o es muy corta (mínimo 32 caracteres). Configúrala con User Secrets, ver README.");
 builder.Services.AddSingleton(jwt);
 
 // Inyección de dependencias
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IDepartmentService, DepartmentService>();
+builder.Services.AddScoped<IUserRoleService, UserRoleService>();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -40,7 +48,8 @@ builder.Services
             ClockSkew = TimeSpan.Zero
         };
     });
-builder.Services.AddAuthorization();
+// Políticas por rol y por departamento (ver docs/matriz-de-permisos.md)
+builder.Services.AddKnovaAuthorization();
 
 // CORS para el frontend (Live Server)
 builder.Services.AddCors(options =>
@@ -49,7 +58,7 @@ builder.Services.AddCors(options =>
         .AllowAnyHeader()
         .AllowAnyMethod()));
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options => options.Filters.Add<KnovaExceptionFilter>());
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {

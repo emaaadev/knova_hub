@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.Json;
 using KnovaHub.ApplicationLayer.DTOs;
 using KnovaHub.ApplicationLayer.Services;
-using KnovaHub.InfrastructureLayer.Exceptions;
+using KnovaHub.DomainLayer.Exceptions;
 using KnovaHub.Tests.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -50,7 +50,7 @@ public class AuthEndpointTests
         Token = "token-de-prueba",
         UserId = 10,
         Email = "contacto@empresa.com",
-        Role = "Admin",
+        Role = "AdminEmpresa",
         CompanyId = 5,
         CompanyName = "Empresa de Prueba SRL",
         Rnc = "131234567"
@@ -131,6 +131,53 @@ public class AuthEndpointTests
             Assert.That(cuerpo.GetProperty("message").GetString(), Is.EqualTo("Las contraseñas no coinciden."));
         });
     }
+
+    [Test]
+    public async Task Register_RncInvalido_Devuelve400ConCampoYMensaje()
+    {
+        _factory.AuthService.Setup(s => s.RegisterAsync(It.IsAny<RegisterRequestDto>()))
+            .ThrowsAsync(new DataValidationException(
+                "rnc",
+                "El RNC debe contener exactamente 9 dígitos."));
+
+        var respuesta = await _client.PostAsJsonAsync(
+            "/api/auth/register",
+            TestData.RegistroValido());
+
+        var cuerpo = await LeerJson(respuesta);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(respuesta.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+            Assert.That(cuerpo.GetProperty("field").GetString(), Is.EqualTo("rnc"));
+            Assert.That(cuerpo.GetProperty("message").GetString(),
+                Is.EqualTo("El RNC debe contener exactamente 9 dígitos."));
+        });
+    }
+
+    [Test]
+    public async Task Register_EmailInvalido_Devuelve400ConCampoYMensaje()
+    {
+        _factory.AuthService.Setup(s => s.RegisterAsync(It.IsAny<RegisterRequestDto>()))
+            .ThrowsAsync(new DataValidationException(
+                "email",
+                "El correo electrónico no tiene un formato válido."));
+
+        var respuesta = await _client.PostAsJsonAsync(
+            "/api/auth/register",
+            TestData.RegistroValido());
+
+        var cuerpo = await LeerJson(respuesta);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(respuesta.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+            Assert.That(cuerpo.GetProperty("field").GetString(), Is.EqualTo("email"));
+            Assert.That(cuerpo.GetProperty("message").GetString(),
+                Is.EqualTo("El correo electrónico no tiene un formato válido."));
+        });
+    }
+
 
     [Test]
     public async Task Register_JsonMalFormado_Devuelve400SinLlamarAlServicio()
@@ -247,7 +294,7 @@ public class AuthEndpointTests
             Assert.That(respuesta.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             Assert.That(cuerpo.GetProperty("userId").GetString(), Is.EqualTo("10"));
             Assert.That(cuerpo.GetProperty("email").GetString(), Is.EqualTo("contacto@empresa.com"));
-            Assert.That(cuerpo.GetProperty("role").GetString(), Is.EqualTo("Admin"));
+            Assert.That(cuerpo.GetProperty("role").GetString(), Is.EqualTo("AdminEmpresa"));
             Assert.That(cuerpo.GetProperty("companyId").GetString(), Is.EqualTo("5"));
         });
     }
