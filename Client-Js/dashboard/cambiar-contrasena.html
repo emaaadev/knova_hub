@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Cambio de contraseña obligatorio de Knova Hub.">
+    <title>Cambiar contraseña — Knova Hub</title>
+
+    <link rel="stylesheet" href="./css/dashboard.css">
+    <link rel="stylesheet" href="./css/manage.css">
+    <script src="./js/app.js" defer></script>
+    <script src="./js/cambiar-contrasena.js" defer></script>
+
+    <style>
+        .password-layout {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .password-card {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .password-card .brand-mark {
+            color: var(--brand);
+            font-weight: 700;
+            font-size: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="password-layout">
+        <section class="card password-card">
+            <p class="brand-mark">Knova Hub</p>
+            <h1 style="margin-top: 8px;">Cambia tu contraseña</h1>
+            <p class="page-subtitle" style="margin: 8px 0 20px;">
+                Es tu primer inicio de sesión con una contraseña temporal. Elige una nueva para continuar.
+            </p>
+
+            <div class="form-grid" style="grid-template-columns: 1fr;">
+                <div class="field">
+                    <label for="f-actual">Contraseña actual <span class="req">*</span></label>
+                    <input type="password" id="f-actual" autocomplete="current-password">
+                </div>
+                <div class="field">
+                    <label for="f-nueva">Nueva contraseña <span class="req">*</span></label>
+                    <input type="password" id="f-nueva" autocomplete="new-password">
+                    <p class="inline-note">Mínimo 8 caracteres, un número y un carácter especial.</p>
+                </div>
+                <div class="field">
+                    <label for="f-confirmar">Confirmar nueva contraseña <span class="req">*</span></label>
+                    <input type="password" id="f-confirmar" autocomplete="new-password">
+                </div>
+            </div>
+
+            <div class="form-message" id="form-message" role="alert" hidden></div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-primary" id="btn-guardar" style="width: 100%;">Cambiar contraseña</button>
+            </div>
+        </section>
+    </main>
+</body>
+
+</html>

@@ -12,4 +12,7 @@ public interface IDepartmentService
     Task<DepartmentDto> UpdateAsync(int companyId, int departmentId, UpdateDepartmentDto dto);
 
     Task<List<DepartmentDto>> SetSupervisorDepartmentsAsync(int companyId, int supervisorId, AssignSupervisorDepartmentsDto dto);
+
+    /// <summary>Departamentos asignados a un Supervisor (para el AdminEmpresa, en la pantalla de gestión).</summary>
+    Task<List<DepartmentDto>> GetSupervisedDepartmentsAsync(int companyId, int supervisorId);
 }

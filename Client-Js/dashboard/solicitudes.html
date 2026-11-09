@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Solicitudes de alta de empleados de Knova Hub.">
+    <title>Solicitudes — Knova Hub</title>
+
+    <link rel="stylesheet" href="./css/dashboard.css">
+    <link rel="stylesheet" href="./css/manage.css">
+    <script src="./js/app.js" defer></script>
+    <script src="./js/solicitudes.js" defer></script>
+</head>
+
+<body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+    <div class="shell">
+        <aside class="sidebar">
+            <a class="sidebar-logo" href="../home/index.html" aria-label="Knova Hub — Inicio">
+                <img src="../assets/logo.png" alt="Knova Hub" width="1983" height="793">
+            </a>
+
+            <nav class="side-nav" aria-label="Navegación del panel">
+                <a class="nav-item" data-page="dashboard" href="dashboard.html">Inicio</a>
+                <a class="nav-item" data-page="usuarios" data-role-gestion href="usuarios.html">Usuarios</a>
+                <a class="nav-item" data-page="solicitudes" data-role-gestion href="solicitudes.html">Solicitudes</a>
+                <a class="nav-item" data-page="departamentos" data-role-gestion href="departamentos.html">Departamentos</a>
+                <a class="nav-item" href="#">Documentos</a>
+                <a class="nav-item" href="#">Wikis y minutas</a>
+                <a class="nav-item" href="#">Recomendaciones (IA)</a>
+            </nav>
+        </aside>
+
+        <div class="main">
+            <header class="topbar">
+                <h2 class="topbar-title">Solicitudes</h2>
+
+                <div class="user-menu">
+                    <div class="user-info">
+                        <span class="user-name" id="user-name"></span>
+                        <span class="role-badge" id="user-role"></span>
+                    </div>
+                    <button type="button" class="logout-btn" id="logout">Cerrar sesión</button>
+                </div>
+            </header>
+
+            <main class="dashboard-content" id="contenido">
+                <div class="page-header">
+                    <div>
+                        <h1 id="titulo-solicitudes">Solicitudes de alta</h1>
+                        <p class="page-subtitle" id="list-subtitle">Cargando…</p>
+                    </div>
+                    <div class="toolbar">
+                        <button type="button" class="btn btn-primary" id="btn-nueva" hidden>Nueva solicitud</button>
+                    </div>
+                </div>
+
+                <section class="card">
+                    <div class="table-wrap">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Empleado</th>
+                                    <th>Correo</th>
+                                    <th>Departamento</th>
+                                    <th id="col-solicitado">Solicitado por</th>
+                                    <th>Estado</th>
+                                    <th>Fecha</th>
+                                    <th id="col-acciones">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cuerpo-solicitudes"></tbody>
+                        </table>
+                    </div>
+                    <p class="empty-state" id="vacio-solicitudes" hidden>No hay solicitudes todavía.</p>
+                </section>
+
+                <section class="card" id="card-form" hidden>
+                    <h2>Nueva solicitud de alta</h2>
+                    <p class="page-subtitle">La solicitud quedará pendiente hasta que el AdminEmpresa la apruebe.</p>
+
+                    <div class="form-grid">
+                        <div class="field">
+                            <label for="f-nombre">Nombre completo <span class="req">*</span></label>
+                            <input type="text" id="f-nombre" autocomplete="off">
+                        </div>
+                        <div class="field">
+                            <label for="f-email">Correo <span class="req">*</span></label>
+                            <input type="email" id="f-email" autocomplete="off">
+                        </div>
+                        <div class="field">
+                            <label for="f-departamento">Departamento <span class="req">*</span></label>
+                            <select id="f-departamento"></select>
+                        </div>
+                    </div>
+
+                    <div class="form-message" id="form-message" role="alert" hidden></div>
+
+                    <div class="form-message is-error" id="aviso-sin-deptos" hidden>
+                        No tienes departamentos activos asignados. Pide al AdminEmpresa que te asigne uno para poder solicitar altas.
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary" id="btn-enviar">Enviar solicitud</button>
+                        <button type="button" class="btn" id="btn-cancelar">Cancelar</button>
+                    </div>
+                </section>
+
+                <section class="card" id="card-temp" hidden>
+                    <h2>Solicitud aprobada</h2>
+                    <p>Se creó el usuario con esta contraseña temporal. Compártela con el empleado para su primer inicio de sesión.</p>
+                    <div class="temp-password-box">
+                        <code id="temp-password"></code>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn" id="btn-temp-ok">Entendido</button>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+</body>
+
+</html>
