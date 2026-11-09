@@ -61,3 +61,55 @@ Sin token, o con un token vencido o inválido, la respuesta es **401**. Con un t
 ## Limitación conocida
 
 El rol viaja dentro del JWT, que dura 8 horas. Si a un AdminEmpresa le cambian el rol, **conserva los permisos de su rol anterior hasta que su token vence**. Aun así, no puede dejar la empresa sin AdminEmpresa, porque esa regla se valida contra la base de datos. Hay dos formas de cerrarlo en otro ticket: validar el rol contra la base de datos en cada petición (`OnTokenValidated`) o acortar la duración del token. Lo mismo ocurre con un usuario desactivado: su token sigue siendo válido hasta que venza.
+
+---
+
+# Módulo Usuarios y solicitudes de alta — Ticket 4 (Avance 3)
+
+## Roles implicados
+
+- **AdminEmpresa**: lista, crea, ve, edita y activa/desactiva usuarios (además de cambiar roles, del Ticket 3), siempre dentro de su empresa.
+- **Supervisor**: solo ve a los usuarios de los departamentos que supervisa y solicita el alta de empleados de esos departamentos.
+- **Usuario**: sin acceso al módulo (solo puede cambiar su propia contraseña).
+
+## Solicitudes de alta
+
+1. El **Supervisor** crea una solicitud con los datos del empleado (nombre, correo, teléfono y departamento). La solicitud queda **Pendiente** y el usuario **no existe ni puede entrar**.
+2. El **AdminEmpresa** aprueba o rechaza la solicitud.
+3. Al **aprobar**, el sistema crea el `Usuario` (rol Usuario, en el departamento indicado) con una **contraseña temporal** generada con BCrypt y marca `MustChangePassword = true`.
+4. El empleado entra con la contraseña temporal y **debe cambiarla** en su primer inicio de sesión.
+
+## Matriz por endpoint (nuevos)
+
+| Endpoint | AdminPlataforma | AdminEmpresa | Supervisor | Usuario |
+|----------|:---:|:---:|:---:|:---:|
+| `GET /api/users` (listar) | ❌ | ✅ todos los de su empresa | 🟡 solo los de sus departamentos | ❌ |
+| `GET /api/users/{id}` | ❌ | ✅ | 🟡 | ❌ |
+| `POST /api/users` (crear) | ❌ | ✅ | ❌ | ❌ |
+| `PUT /api/users/{id}` (editar) | ❌ | ✅ | ❌ | ❌ |
+| `PATCH /api/users/{id}/active` | ❌ | ✅ | ❌ | ❌ |
+| `GET /api/users/requests` | ❌ | ✅ todas las de su empresa | 🟡 las propias | ❌ |
+| `POST /api/users/requests` | ❌ | ❌ | ✅ solo en sus departamentos | ❌ |
+| `POST /api/users/requests/{id}/approve` | ❌ | ✅ | ❌ | ❌ |
+| `POST /api/users/requests/{id}/reject` | ❌ | ✅ | ❌ | ❌ |
+| `GET /api/supervisors/{id}/departments` | ❌ | ✅ | ❌ | ❌ |
+| `POST /api/auth/change-password` | ✅ | ✅ | ✅ | ✅ (la propia) |
+
+## Reglas de negocio
+
+| Regla | Dónde se valida | Respuesta |
+|-------|-----------------|-----------|
+| El Supervisor solo solicita altas en departamentos activos que supervisa | `RegistrationRequestService` | 400 / 409 |
+| El correo no puede estar en uso por un usuario ni por otra solicitud pendiente | `RegistrationRequestService` | 409 |
+| Al aprobar se revalida que el correo siga libre y el departamento siga activo | `RegistrationRequestService` | 409 |
+| Solo se aprueban/rechazan solicitudes Pendientes | `RegistrationRequestService` | 409 |
+| La contraseña temporal se genera con BCrypt y obliga a cambiarla (`MustChangePassword`) | `PasswordPolicy` + `AuthService` | — |
+| El AdminEmpresa no puede desactivarse a sí mismo | `UserService` | 409 |
+| El cambio de contraseña exige la contraseña actual y una nueva que cumpla la política | `AuthService` | 401 / 400 |
+
+## Cómo está implementado
+
+- `UserService` e `IRegistrationRequestService` siguen el patrón de capas (contrato en ApplicationLayer, implementación en Services).
+- `RegistrationRequestRepository.ApproveAsync` crea el `User` y actualiza la solicitud en la **misma transacción**.
+- Políticas nuevas en `Policies.cs`: `GestionUsuarios` (AdminEmpresa o Supervisor) y `Supervisor`.
+- El login devuelve `mustChangePassword`; el frontend redirige a `cambiar-contrasena.html` y la API expone `POST /api/auth/change-password`.
