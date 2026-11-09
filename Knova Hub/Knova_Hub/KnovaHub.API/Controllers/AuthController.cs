@@ -70,4 +70,20 @@ public class AuthController : ControllerBase
             companyId = User.FindFirstValue("companyId")
         });
     }
+
+    [Authorize]
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword(ChangePasswordDto dto)
+    {
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            await _auth.ChangePasswordAsync(userId, dto);
+            return NoContent();
+        }
+        catch (InvalidCredentialsException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+    }
 }

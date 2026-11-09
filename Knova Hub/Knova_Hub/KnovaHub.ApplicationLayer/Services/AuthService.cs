@@ -143,9 +143,26 @@ public class AuthService : IAuthService
             && password.Any(c => !char.IsLetterOrDigit(c) && !char.IsWhiteSpace(c));
     }
 
-    private AuthResponseDto BuildResponse(User user)
+    public async Task ChangePasswordAsync(int userId, ChangePasswordDto dto)
     {
-        var expiresAt = DateTime.UtcNow.AddMinutes(_jwt.ExpiresMinutes);
+        var user = await _users.GetByIdAsync(userId)
+            ?? throw new InvalidCredentialsException();
+
+        if (!BCrypt.Net.BCrypt.Verify(dto.CurrentPassword, user.PasswordHash))
+            throw new InvalidCredentialsException();
+
+        if (dto.NewPassword != dto.ConfirmPassword)
+            throw new DataValidationException("Las contraseñas no coinciden.");
+
+        if (!PasswordPolicy.IsStrong(dto.NewPassword))
+            throw new DataValidationException(
+                "La contraseña debe tener mínimo 8 caracteres, al menos un número y un carácter especial.");
+
+        await _users.UpdatePasswordAsync(userId, BCrypt.Net.BCrypt.HashPassword(dto.NewPassword));
+    }
+
+    private AuthResponseDto BuildResponse(User user)
+    {        var expiresAt = DateTime.UtcNow.AddMinutes(_jwt.ExpiresMinutes);
         var role = user.Role?.Name ?? SystemRoles.UsuarioRoleName;
         var companyName = user.Company?.Name ?? string.Empty;
         var rnc = user.Company?.Rnc ?? string.Empty;
@@ -186,7 +203,8 @@ public class AuthService : IAuthService
             CompanyName = companyName,
             Rnc = rnc,
             Sector = sector,
-            Activity = activity
+            Activity = activity,
+            MustChangePassword = user.MustChangePassword
         };
     }
 }
