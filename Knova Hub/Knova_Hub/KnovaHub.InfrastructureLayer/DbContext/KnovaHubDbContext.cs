@@ -14,6 +14,7 @@ public class KnovaHubDbContext : DbContext
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<Department> Departments => Set<Department>();
     public DbSet<SupervisorDepartment> SupervisorDepartments => Set<SupervisorDepartment>();
+    public DbSet<UserRegistrationRequest> UserRegistrationRequests => Set<UserRegistrationRequest>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -119,6 +120,7 @@ public class KnovaHubDbContext : DbContext
             e.Property(u => u.FullName).IsRequired().HasMaxLength(100);
             e.Property(u => u.Email).IsRequired().HasMaxLength(150);
             e.Property(u => u.PasswordHash).IsRequired().HasMaxLength(100);
+            e.Property(u => u.MustChangePassword).IsRequired();
             e.Property(u => u.IsActive).IsRequired();
             e.Property(u => u.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
 
@@ -139,6 +141,39 @@ public class KnovaHubDbContext : DbContext
             e.HasOne(u => u.Role)
                 .WithMany(r => r.Users)
                 .HasForeignKey(u => u.RoleId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<UserRegistrationRequest>(e =>
+        {
+            e.ToTable("UserRegistrationRequests");
+            e.HasKey(r => r.Id);
+            e.Property(r => r.FullName).IsRequired().HasMaxLength(100);
+            e.Property(r => r.Email).IsRequired().HasMaxLength(150);
+            e.Property(r => r.Status).HasConversion<int>().IsRequired();
+            e.Property(r => r.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            e.HasIndex(r => r.Email).HasDatabaseName("IX_UserRegistrationRequests_Email");
+            e.HasIndex(r => new { r.CompanyId, r.Status }).HasDatabaseName("IX_UserRegistrationRequests_CompanyId_Status");
+
+            e.HasOne(r => r.Company)
+                .WithMany()
+                .HasForeignKey(r => r.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(r => r.Department)
+                .WithMany()
+                .HasForeignKey(r => r.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(r => r.RequestedBy)
+                .WithMany()
+                .HasForeignKey(r => r.RequestedById)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(r => r.ReviewedBy)
+                .WithMany()
+                .HasForeignKey(r => r.ReviewedById)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }

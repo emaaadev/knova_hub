@@ -19,6 +19,12 @@ public static class Policies
     /// <summary>AdminEmpresa o Supervisor de una empresa.</summary>
     public const string GestionDepartamentos = nameof(GestionDepartamentos);
 
+    /// <summary>AdminEmpresa o Supervisor: gestión del módulo de usuarios (listar/ver).</summary>
+    public const string GestionUsuarios = nameof(GestionUsuarios);
+
+    /// <summary>Solo Supervisor de una empresa.</summary>
+    public const string Supervisor = nameof(Supervisor);
+
     /// <summary>
     /// Por recurso (<see cref="DepartmentResource"/>): AdminEmpresa sobre cualquier departamento de su empresa,
     /// Supervisor solo sobre los departamentos que tiene asignados.
@@ -43,6 +49,16 @@ public static class Policies
             options.AddPolicy(GestionDepartamentos, p => p
                 .RequireAuthenticatedUser()
                 .RequireRole(SystemRoles.AdminEmpresaRoleName, SystemRoles.SupervisorRoleName)
+                .RequireClaim(KnovaClaims.CompanyId));
+
+            options.AddPolicy(GestionUsuarios, p => p
+                .RequireAuthenticatedUser()
+                .RequireRole(SystemRoles.AdminEmpresaRoleName, SystemRoles.SupervisorRoleName)
+                .RequireClaim(KnovaClaims.CompanyId));
+
+            options.AddPolicy(Supervisor, p => p
+                .RequireAuthenticatedUser()
+                .RequireRole(SystemRoles.SupervisorRoleName)
                 .RequireClaim(KnovaClaims.CompanyId));
 
             options.AddPolicy(AccesoDepartamento, p => p
