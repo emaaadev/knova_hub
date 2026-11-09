@@ -342,4 +342,184 @@ public class AuthorizationEndpointTests
         var r = await _client.PutAsJsonAsync("/api/users/30/department", new ChangeUserDepartmentDto { DepartmentId = DeptoSupervisado });
         Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.Forbidden));
     }
+
+    // ---------- Casos adicionales: sin token, otros roles y 404 ----------
+
+    [Test]
+    public async Task VerDepartamento_SinToken_Devuelve401()
+    {
+        var r = await _client.GetAsync($"/api/departments/{DeptoSupervisado}");
+        Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+    }
+
+    [Test]
+    public async Task VerDepartamento_Usuario_Devuelve403()
+    {
+        ComoUsuario();
+        var r = await _client.GetAsync($"/api/departments/{DeptoSupervisado}");
+        Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.Forbidden));
+    }
+
+    // ---------- PUT /api/departments/{id} ----------
+
+    [Test]
+    public async Task EditarDepartamento_AdminEmpresa_Devuelve200()
+    {
+        _factory.DepartmentService.Setup(s => s.UpdateAsync(Empresa, DeptoSupervisado, It.IsAny<UpdateDepartmentDto>()))
+            .ReturnsAsync(new DepartmentDto { Id = DeptoSupervisado, Name = "Comercial", IsActive = true });
+        ComoAdmin();
+
+        var r = await _client.PutAsJsonAsync($"/api/departments/{DeptoSupervisado}",
+            new UpdateDepartmentDto { Name = "Comercial", IsActive = true });
+
+        Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+    }
+
+    [Test]
+    public async Task EditarDepartamento_Supervisor_Devuelve403SinLlamarAlServicio()
+    {
+        ComoSupervisor();
+
+        var r = await _client.PutAsJsonAsync($"/api/departments/{DeptoSupervisado}",
+            new UpdateDepartmentDto { Name = "Comercial", IsActive = true });
+
+        Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.Forbidden));
+        _factory.DepartmentService.Verify(
+            s => s.UpdateAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<UpdateDepartmentDto>()), Times.Never);
+    }
+
+    [Test]
+    public async Task EditarDepartamento_DeOtraEmpresa_Devuelve404()
+    {
+        _factory.DepartmentService.Setup(s => s.UpdateAsync(Empresa, 999, It.IsAny<UpdateDepartmentDto>()))
+            .ThrowsAsync(new NotFoundException("El departamento no existe en tu empresa."));
+        ComoAdmin();
+
+        var r = await _client.PutAsJsonAsync("/api/departments/999",
+            new UpdateDepartmentDto { Name = "X", IsActive = true });
+
+        Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
+    }
+
+    // ---------- PUT /api/supervisors/{id}/departments ----------
+
+    [Test]
+    public async Task AsignarDepartamentosASupervisor_AdminEmpresa_Devuelve200()
+    {
+        _factory.DepartmentService.Setup(s => s.SetSupervisorDepartmentsAsync(
+                Empresa, SupervisorId, It.IsAny<AssignSupervisorDepartmentsDto>()))
+            .ReturnsAsync(new List<DepartmentDto>
+            {
+                new DepartmentDto { Id = DeptoSupervisado, Name = "Ventas", IsActive = true }
+            });
+        ComoAdmin();
+
+        var r = await _client.PutAsJsonAsync($"/api/supervisors/{SupervisorId}/departments",
+            new AssignSupervisorDepartmentsDto { DepartmentIds = { DeptoSupervisado } });
+
+        Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+    }
+
+    [Test]
+    public async Task AsignarDepartamentosASupervisor_Usuario_Devuelve403()
+    {
+        ComoUsuario();
+
+        var r = await _client.PutAsJsonAsync($"/api/supervisors/{SupervisorId}/departments",
+            new AssignSupervisorDepartmentsDto { DepartmentIds = { DeptoSupervisado } });
+
+        Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.Forbidden));
+    }
+
+    // ---------- PUT /api/users/{id}/role ----------
+
+    [Test]
+    public async Task CambiarRol_SinToken_Devuelve401()
+    {
+        var r = await _client.PutAsJsonAsync("/api/users/11/role",
+            new ChangeRoleDto { RoleId = SystemRoles.SupervisorRoleId });
+
+        Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+    }
+
+    [Test]
+    public async Task CambiarRol_Usuario_Devuelve403()
+    {
+        ComoUsuario();
+
+        var r = await _client.PutAsJsonAsync("/api/users/11/role",
+            new ChangeRoleDto { RoleId = SystemRoles.SupervisorRoleId });
+
+        Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.Forbidden));
+        _factory.UserRoleService.Verify(
+            s => s.ChangeRoleAsync(It.IsAny<Actor>(), It.IsAny<int>(), It.IsAny<ChangeRoleDto>()), Times.Never);
+    }
+
+    [Test]
+    public async Task CambiarRol_AdminPlataforma_Devuelve403()
+    {
+        ComoAdminPlataforma();
+
+        var r = await _client.PutAsJsonAsync("/api/users/11/role",
+            new ChangeRoleDto { RoleId = SystemRoles.SupervisorRoleId });
+
+        Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.Forbidden));
+        _factory.UserRoleService.Verify(
+            s => s.ChangeRoleAsync(It.IsAny<Actor>(), It.IsAny<int>(), It.IsAny<ChangeRoleDto>()), Times.Never);
+    }
+
+    [Test]
+    public async Task CambiarRol_UsuarioDeOtraEmpresa_Devuelve404()
+    {
+        _factory.UserRoleService.Setup(s => s.ChangeRoleAsync(It.IsAny<Actor>(), 999, It.IsAny<ChangeRoleDto>()))
+            .ThrowsAsync(new NotFoundException("El usuario no existe en tu empresa."));
+        ComoAdmin();
+
+        var r = await _client.PutAsJsonAsync("/api/users/999/role",
+            new ChangeRoleDto { RoleId = SystemRoles.SupervisorRoleId });
+
+        Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
+    }
+
+    [Test]
+    public async Task CambiarRol_RolNoAsignable_Devuelve400()
+    {
+        _factory.UserRoleService.Setup(s => s.ChangeRoleAsync(It.IsAny<Actor>(), 11, It.IsAny<ChangeRoleDto>()))
+            .ThrowsAsync(new DataValidationException("Rol no válido. Solo se puede asignar AdminEmpresa, Supervisor o Usuario."));
+        ComoAdmin();
+
+        var r = await _client.PutAsJsonAsync("/api/users/11/role",
+            new ChangeRoleDto { RoleId = SystemRoles.AdminPlataformaRoleId });
+        var cuerpo = await r.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+            Assert.That(cuerpo.GetProperty("message").GetString(), Does.Contain("Rol no válido"));
+        });
+    }
+
+    // ---------- PUT /api/users/{id}/department ----------
+
+    [Test]
+    public async Task MoverUsuario_SinToken_Devuelve401()
+    {
+        var r = await _client.PutAsJsonAsync("/api/users/30/department",
+            new ChangeUserDepartmentDto { DepartmentId = DeptoSupervisado });
+
+        Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+    }
+
+    [Test]
+    public async Task MoverUsuario_UsuarioDeOtraEmpresa_Devuelve404()
+    {
+        _factory.UserRoleService.Setup(s => s.GetUserAsync(Empresa, 999))
+            .ThrowsAsync(new NotFoundException("El usuario no existe en tu empresa."));
+        ComoAdmin();
+
+        var r = await _client.PutAsJsonAsync("/api/users/999/department",
+            new ChangeUserDepartmentDto { DepartmentId = DeptoSupervisado });
+
+        Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
+    }
 }

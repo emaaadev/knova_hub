@@ -69,7 +69,12 @@ if (registerForm) {
         const contacto = registerForm.contacto.value.trim();
         const password = registerForm.password.value;
         const confirmar = registerForm.confirmar.value;
-        
+        const fieldInputs = {
+            rnc: registerForm.rnc,
+            email: registerForm.email,
+            sector: registerForm.sector,
+            activity: registerForm.actividad
+        };
 
         let valid = true;
 
@@ -133,7 +138,7 @@ if (registerForm) {
                     companyName: nombre,
                     email,
                     phone: telefono,
-                    address: direccion, 
+                    address: direccion,
                     sector: sector,
                     activity: activity,
                     contactName: contacto,
@@ -147,14 +152,8 @@ if (registerForm) {
             if (response.ok) {
                 showMessage(registerForm, "Empresa registrada. Redirigiendo al inicio de sesión…", false);
                 setTimeout(() => (window.location.href = "login.html"), 1500);
-            } else if (response.status === 409 && data.field === "rnc") {
-                showError(registerForm.rnc, data.message);
-            } else if (response.status === 409 && data.field === "email") {
-                showError(registerForm.email, data.message);
-                } else if (response.status === 400 && data.field === "sector") {
-                    showError(registerForm.sector, data.message);
-                } else if (response.status === 400 && data.field === "activity") {
-                    showError(registerForm.actividad, data.message);
+            } else if ([400, 409].includes(response.status) && fieldInputs[data.field]) {
+                showError(fieldInputs[data.field], data.message);
             } else {
                 showMessage(registerForm, data.message || "No se pudo registrar la empresa.", true);
             }

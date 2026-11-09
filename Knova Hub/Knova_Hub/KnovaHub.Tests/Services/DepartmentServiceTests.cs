@@ -141,4 +141,91 @@ public class DepartmentServiceTests
             It.Is<IReadOnlyCollection<int>>(ids => ids.Count == 2 && ids.Contains(1) && ids.Contains(2))), Times.Once);
         Assert.That(r.Select(d => d.Name), Is.EqualTo(new[] { "Soporte", "Ventas" }));
     }
+
+    // ---------- Crear: limites del nombre ----------
+
+    [Test]
+    public void Create_NombreDeMasDe100Caracteres_Rechazado()
+    {
+        var ex = Assert.ThrowsAsync<DataValidationException>(() =>
+            _service.CreateAsync(Empresa, new CreateDepartmentDto { Name = new string('a', 101) }));
+
+        Assert.That(ex!.Message, Does.Contain("100 caracteres"));
+        _departments.Verify(d => d.AddAsync(It.IsAny<Department>()), Times.Never);
+    }
+
+    [Test]
+    public async Task Create_NombreDe100Caracteres_Aceptado()
+    {
+        var nombre = new string('a', 100);
+
+        var r = await _service.CreateAsync(Empresa, new CreateDepartmentDto { Name = nombre });
+
+        Assert.That(r.Name, Is.EqualTo(nombre));
+    }
+
+    // ---------- Ver ----------
+
+    [Test]
+    public async Task Get_Valido_DevuelveElDepartamento()
+    {
+        _departments.Setup(d => d.GetByIdAsync(Empresa, 1)).ReturnsAsync(DeptosEmpresa()[0]);
+
+        var r = await _service.GetAsync(Empresa, 1);
+
+        Assert.That(r.Name, Is.EqualTo("Ventas"));
+    }
+
+    [Test]
+    public void Get_DepartamentoDeOtraEmpresa_LanzaNotFound()
+    {
+        Assert.ThrowsAsync<NotFoundException>(() => _service.GetAsync(Empresa, 999));
+    }
+
+    // ---------- Editar ----------
+
+    [Test]
+    public async Task Update_Valido_ActualizaNombreYEstado()
+    {
+        var depto = new Department { Id = 1, CompanyId = Empresa, Name = "Ventas", IsActive = true };
+        _departments.Setup(d => d.GetByIdAsync(Empresa, 1)).ReturnsAsync(depto);
+
+        var r = await _service.UpdateAsync(Empresa, 1,
+            new UpdateDepartmentDto { Name = "  Comercial  ", IsActive = false });
+
+        _departments.Verify(d => d.UpdateAsync(depto), Times.Once);
+        Assert.Multiple(() =>
+        {
+            Assert.That(r.Name, Is.EqualTo("Comercial"));
+            Assert.That(r.IsActive, Is.False);
+        });
+    }
+
+    [TestCase("", TestName = "Update_NombreVacio_Rechazado")]
+    [TestCase("   ", TestName = "Update_NombreSoloEspacios_Rechazado")]
+    public void Update_NombreInvalido_LanzaDataValidation(string nombre)
+    {
+        _departments.Setup(d => d.GetByIdAsync(Empresa, 1))
+            .ReturnsAsync(new Department { Id = 1, CompanyId = Empresa, Name = "Ventas", IsActive = true });
+
+        Assert.ThrowsAsync<DataValidationException>(() =>
+            _service.UpdateAsync(Empresa, 1, new UpdateDepartmentDto { Name = nombre }));
+        _departments.Verify(d => d.UpdateAsync(It.IsAny<Department>()), Times.Never);
+    }
+
+    // ---------- Asignar departamentos a un Supervisor ----------
+
+    [Test]
+    public async Task SetSupervisorDepartments_ListaVacia_QuitaTodosLosDepartamentos()
+    {
+        _users.Setup(u => u.GetByIdInCompanyAsync(Empresa, 20))
+            .ReturnsAsync(TestData.UsuarioDeEmpresa(20, SystemRoles.SupervisorRoleId));
+
+        var r = await _service.SetSupervisorDepartmentsAsync(
+            Empresa, 20, new AssignSupervisorDepartmentsDto());
+
+        _departments.Verify(d => d.SetSupervisorDepartmentsAsync(20,
+            It.Is<IReadOnlyCollection<int>>(ids => ids.Count == 0)), Times.Once);
+        Assert.That(r, Is.Empty);
+    }
 }

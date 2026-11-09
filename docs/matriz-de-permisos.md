@@ -21,6 +21,7 @@ La base de datos lo refuerza con `CK_Users_CompanyId_Role`: solo un usuario con 
 - El **AdminEmpresa** los crea, los edita y los activa o desactiva.
 - Un **Supervisor** puede tener asignados uno o varios departamentos (tabla `SupervisorDepartments`).
 - Cada **Usuario** pertenece a un departamento (`Users.DepartmentId`). La columna admite `NULL` porque AdminEmpresa y AdminPlataforma no tienen departamento, y la API lo exige cuando el rol es Usuario.
+- Desactivar un departamento no mueve a sus Usuarios ni quita a sus Supervisores: el Supervisor sigue viéndolo y puede mover usuarios fuera de él, pero no se le pueden asignar usuarios nuevos ni asignarlo a otro Supervisor.
 
 ## Matriz por endpoint
 
@@ -59,4 +60,4 @@ Sin token, o con un token vencido o inválido, la respuesta es **401**. Con un t
 
 ## Limitación conocida
 
-El rol viaja dentro del JWT, que dura 8 horas. Si a un AdminEmpresa le cambian el rol, **conserva los permisos de su rol anterior hasta que su token vence**. Aun así, no puede dejar la empresa sin AdminEmpresa, porque esa regla se valida contra la base de datos. Hay dos formas de cerrarlo en otro ticket: validar el rol contra la base de datos en cada petición (`OnTokenValidated`) o acortar la duración del token.
+El rol viaja dentro del JWT, que dura 8 horas. Si a un AdminEmpresa le cambian el rol, **conserva los permisos de su rol anterior hasta que su token vence**. Aun así, no puede dejar la empresa sin AdminEmpresa, porque esa regla se valida contra la base de datos. Hay dos formas de cerrarlo en otro ticket: validar el rol contra la base de datos en cada petición (`OnTokenValidated`) o acortar la duración del token. Lo mismo ocurre con un usuario desactivado: su token sigue siendo válido hasta que venza.

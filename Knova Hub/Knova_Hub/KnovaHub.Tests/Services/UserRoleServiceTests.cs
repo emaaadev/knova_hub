@@ -185,4 +185,93 @@ public class UserRoleServiceTests
         _users.Verify(u => u.UpdateDepartmentAsync(OtroId, DeptoVentas), Times.Once);
         Assert.That(r.DepartmentId, Is.EqualTo(DeptoVentas));
     }
+
+    // ---------- Cambio de rol: casos adicionales ----------
+
+    [Test]
+    public async Task ChangeRole_AdminBajaAOtroAdmin_Permitido()
+    {
+        Existe(TestData.UsuarioDeEmpresa(OtroId, SystemRoles.AdminEmpresaRoleId));
+
+        var r = await _service.ChangeRoleAsync(Admin, OtroId,
+            new ChangeRoleDto { RoleId = SystemRoles.SupervisorRoleId });
+
+        _users.Verify(u => u.ChangeRoleKeepingCompanyAdminAsync(
+            Empresa, OtroId, SystemRoles.SupervisorRoleId, null), Times.Once);
+        Assert.That(r.Role, Is.EqualTo(SystemRoles.SupervisorRoleName));
+    }
+
+    [Test]
+    public async Task ChangeRole_UsuarioAAdminEmpresa_LimpiaElDepartamento()
+    {
+        Existe(TestData.UsuarioDeEmpresa(OtroId, SystemRoles.UsuarioRoleId, departmentId: DeptoVentas));
+
+        var r = await _service.ChangeRoleAsync(Admin, OtroId,
+            new ChangeRoleDto { RoleId = SystemRoles.AdminEmpresaRoleId });
+
+        _users.Verify(u => u.ChangeRoleKeepingCompanyAdminAsync(
+            Empresa, OtroId, SystemRoles.AdminEmpresaRoleId, null), Times.Once);
+        Assert.That(r.DepartmentId, Is.Null);
+    }
+
+    [Test]
+    public void ChangeRole_ActorSinEmpresa_LanzaNotFound()
+    {
+        var plataforma = new Actor(1, null, SystemRoles.AdminPlataformaRoleName);
+
+        Assert.ThrowsAsync<NotFoundException>(() =>
+            _service.ChangeRoleAsync(plataforma, OtroId, new ChangeRoleDto { RoleId = SystemRoles.SupervisorRoleId }));
+        NoSeGuardoNada();
+    }
+
+    // ---------- Mover de departamento: casos adicionales ----------
+
+    [Test]
+    public void ChangeDepartment_DepartamentoInactivo_LanzaDataValidation()
+    {
+        Existe(TestData.UsuarioDeEmpresa(OtroId, SystemRoles.UsuarioRoleId, departmentId: DeptoVentas));
+        _departments.Setup(d => d.GetByIdAsync(Empresa, 8))
+            .ReturnsAsync(new Department { Id = 8, CompanyId = Empresa, Name = "Viejo", IsActive = false });
+
+        Assert.ThrowsAsync<DataValidationException>(() => _service.ChangeDepartmentAsync(Empresa, OtroId, 8));
+        _users.Verify(u => u.UpdateDepartmentAsync(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
+    }
+
+    [Test]
+    public void ChangeDepartment_DepartamentoDeOtraEmpresa_LanzaDataValidation()
+    {
+        Existe(TestData.UsuarioDeEmpresa(OtroId, SystemRoles.UsuarioRoleId, departmentId: DeptoVentas));
+
+        Assert.ThrowsAsync<DataValidationException>(() => _service.ChangeDepartmentAsync(Empresa, OtroId, 500));
+        _users.Verify(u => u.UpdateDepartmentAsync(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
+    }
+
+    [Test]
+    public void ChangeDepartment_UsuarioDeOtraEmpresa_LanzaNotFound()
+    {
+        Assert.ThrowsAsync<NotFoundException>(() => _service.ChangeDepartmentAsync(Empresa, 999, DeptoVentas));
+        _users.Verify(u => u.UpdateDepartmentAsync(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
+    }
+
+    // ---------- Consultar un usuario ----------
+
+    [Test]
+    public async Task GetUser_Valido_DevuelveRolYDepartamento()
+    {
+        Existe(TestData.UsuarioDeEmpresa(OtroId, SystemRoles.UsuarioRoleId, departmentId: DeptoVentas));
+
+        var r = await _service.GetUserAsync(Empresa, OtroId);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(r.Role, Is.EqualTo(SystemRoles.UsuarioRoleName));
+            Assert.That(r.DepartmentId, Is.EqualTo(DeptoVentas));
+        });
+    }
+
+    [Test]
+    public void GetUser_UsuarioDeOtraEmpresa_LanzaNotFound()
+    {
+        Assert.ThrowsAsync<NotFoundException>(() => _service.GetUserAsync(Empresa, 999));
+    }
 }

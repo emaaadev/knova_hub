@@ -16,7 +16,8 @@ public class CreateDepartmentDto
 public class UpdateDepartmentDto
 {
     public string Name { get; set; } = string.Empty;
-    public bool IsActive { get; set; } = true;
+    /// <summary>Si no se envía, se conserva el estado actual.</summary>
+    public bool? IsActive { get; set; }
 }
 
 /// <summary>Lista completa de departamentos que tendrá asignados un Supervisor (reemplaza la anterior).</summary>

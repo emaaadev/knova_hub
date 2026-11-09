@@ -40,7 +40,7 @@ public class AuthService : IAuthService
         if (!IsValidRnc(rnc))
             throw new DataValidationException(
                 "rnc",
-                "El RNC debe contener exactamente 9 dígitos.");
+                "El RNC debe contener 9 u 11 dígitos.");
 
         if (!IsValidEmail(email))
             throw new DataValidationException(
@@ -102,7 +102,8 @@ public class AuthService : IAuthService
 
     private static bool IsValidRnc(string rnc)
     {
-        return Regex.IsMatch(rnc, @"^\d{9}$");
+        return Regex.IsMatch(rnc, @"^(\d{9}|\d{11})$");
+
     }
 
     private static bool IsValidEmail(string email)

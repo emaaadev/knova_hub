@@ -52,7 +52,7 @@ public class DepartmentService : IDepartmentService
     {
         var department = await FindAsync(companyId, departmentId);
         department.Name = ValidName(dto.Name);
-        department.IsActive = dto.IsActive;
+        department.IsActive = dto.IsActive ?? department.IsActive;
 
         await _departments.UpdateAsync(department);
         return ToDto(department);
