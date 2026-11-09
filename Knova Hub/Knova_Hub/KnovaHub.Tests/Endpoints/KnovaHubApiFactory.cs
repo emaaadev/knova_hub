@@ -18,6 +18,8 @@ public class KnovaHubApiFactory : WebApplicationFactory<Program>
     public Mock<IAuthService> AuthService { get; } = new();
     public Mock<IDepartmentService> DepartmentService { get; } = new();
     public Mock<IUserRoleService> UserRoleService { get; } = new();
+    public Mock<IUserService> UserService { get; } = new();
+    public Mock<IRegistrationRequestService> RegistrationRequestService { get; } = new();
 
     /// <summary>Lo usa el handler de la política AccesoDepartamento.</summary>
     public Mock<IDepartmentRepository> DepartmentRepository { get; } = new();
@@ -27,6 +29,8 @@ public class KnovaHubApiFactory : WebApplicationFactory<Program>
         AuthService.Reset();
         DepartmentService.Reset();
         UserRoleService.Reset();
+        UserService.Reset();
+        RegistrationRequestService.Reset();
         DepartmentRepository.Reset();
     }
 
@@ -48,6 +52,12 @@ public class KnovaHubApiFactory : WebApplicationFactory<Program>
 
             services.RemoveAll<IUserRoleService>();
             services.AddSingleton(UserRoleService.Object);
+
+            services.RemoveAll<IUserService>();
+            services.AddSingleton(UserService.Object);
+
+            services.RemoveAll<IRegistrationRequestService>();
+            services.AddSingleton(RegistrationRequestService.Object);
 
             services.RemoveAll<IDepartmentRepository>();
             services.AddSingleton(DepartmentRepository.Object);
