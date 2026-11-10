@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etiquetas — Knova Hub</title>
+    <link rel="stylesheet" href="./css/dashboard.css">
+    <link rel="stylesheet" href="./css/manage.css">
+    <script src="./js/app.js" defer></script>
+    <script src="./js/catalogos.js" defer></script>
+</head>
+<body data-catalog="tags">
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+    <div class="shell">
+        <aside class="sidebar">
+            <a class="sidebar-logo" href="../home/index.html" aria-label="Knova Hub — Inicio">
+                <img src="../assets/logo.png" alt="Knova Hub" width="1983" height="793">
+            </a>
+
+            <nav class="side-nav" aria-label="Navegación del panel">
+                <a class="nav-item" data-page="dashboard" href="dashboard.html">Inicio</a>
+                <a class="nav-item" data-page="usuarios" data-role-gestion href="usuarios.html">Usuarios</a>
+                <a class="nav-item" data-page="solicitudes" data-role-gestion href="solicitudes.html">Solicitudes</a>
+                <a class="nav-item" data-page="departamentos" data-role-gestion href="departamentos.html">Departamentos</a>
+                <a class="nav-item" data-page="documentos" href="documentos.html">Documentos</a>
+                <a class="nav-item" href="documentos.html?tipo=wiki">Wikis y minutas</a>
+                <a class="nav-item" href="#">Recomendaciones (IA)</a>
+            </nav>
+        </aside>
+
+        <div class="main">
+            <header class="topbar">
+                <h2 class="topbar-title" id="module-title">Conocimiento</h2>
+
+                <div class="user-menu">
+                    <div class="user-info">
+                        <span class="user-name" id="user-name"></span>
+                        <span class="role-badge" id="user-role"></span>
+                    </div>
+                    <button type="button" class="logout-btn" id="logout">Cerrar sesión</button>
+                </div>
+            </header>
+
+            <main class="dashboard-content" id="contenido">
+                <div class="page-header">
+                    <div>
+                        <h1>Etiquetas</h1>
+                        <p class="page-subtitle" id="catalog-status" role="status"></p>
+                    </div>
+                    <button class="btn btn-primary" id="new-item" type="button" hidden>Crear</button>
+                </div>
+                <p class="form-message is-error" id="catalog-error" role="alert" hidden></p>
+                <section class="card" aria-label="Etiquetas">
+                    <label class="field">Buscar <input type="search" id="search"></label>
+                    <div class="table-wrap">
+                        <table class="table">
+                            <thead><tr><th>Nombre</th><th>Estado</th><th id="actions-heading" hidden>Acciones</th></tr></thead>
+                            <tbody id="items"></tbody>
+                        </table>
+                    </div>
+                </section>
+                <section class="card" id="editor" hidden>
+                    <h2 id="editor-title"></h2>
+                    <form id="editor-form">
+                        <div class="form-grid">
+                            <label class="field">Nombre <input id="name" maxlength="50" required></label>
+
+                        </div>
+                        <p class="form-message is-error" id="editor-error" role="alert" hidden></p>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" id="save" type="submit">Guardar</button>
+                            <button class="btn" id="cancel" type="button">Cancelar</button>
+                        </div>
+                    </form>
+                </section>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

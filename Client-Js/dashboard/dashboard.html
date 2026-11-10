@@ -11,6 +11,7 @@
     <title>Dashboard — Knova Hub</title>
 
     <link rel="stylesheet" href="./css/dashboard.css">
+    <link rel="stylesheet" href="./css/manage.css">
     <script src="./js/app.js" defer></script>
     <script src="./js/dashboard.js" defer></script>
 </head>
@@ -65,45 +66,39 @@
                     </dl>
                 </section>
 
+                <p class="empty-text" id="stats-status" role="status">Cargando resumen…</p>
                 <section class="summary-grid" aria-label="Resumen">
                     <article class="summary-card">
-                        <span class="summary-value">0</span>
+                        <span class="summary-value" id="stat-documents">—</span>
                         <span class="summary-label">Documentos</span>
                     </article>
                     <article class="summary-card">
-                        <span class="summary-value">0</span>
+                        <span class="summary-value" id="stat-wikis">—</span>
                         <span class="summary-label">Wikis</span>
                     </article>
                     <article class="summary-card">
-                        <span class="summary-value">0</span>
-                        <span class="summary-label">Usuarios</span>
+                        <span class="summary-value" id="stat-minutes">—</span>
+                        <span class="summary-label">Minutas</span>
                     </article>
-                    <article class="summary-card">
-                        <span class="summary-value">0</span>
-                        <span class="summary-label">Recomendaciones</span>
+                    <article class="summary-card" id="users-card" hidden>
+                        <span class="summary-value" id="stat-users">—</span>
+                        <span class="summary-label">Usuarios</span>
                     </article>
                 </section>
 
-                <div class="two-col">
-                    <section class="panel">
-                        <h2>Recomendaciones de la IA</h2>
-                        <p class="empty-text">Aún no hay recomendaciones. Sube conocimiento para empezar.</p>
-                    </section>
+                <section class="panel">
+                    <h2>Actividad reciente</h2>
+                    <p class="empty-text" id="activity-status">Cargando actividad…</p>
+                    <ul class="activity-list" id="recent-activity"></ul>
+                </section>
 
-                    <section class="panel">
-                        <h2>Actividad reciente</h2>
-                        <p class="empty-text">Aún no hay actividad reciente en tu empresa.</p>
-                    </section>
-                </div>
-
-                <section class="quick-actions">
+                <section class="panel quick-actions" data-role-gestion hidden>
                     <h2>Acciones rápidas</h2>
                     <div class="quick-buttons">
-                        <button type="button" class="quick-btn" disabled>Subir documento</button>
-                        <button type="button" class="quick-btn" disabled>Crear wiki</button>
-                        <a class="quick-btn" id="quick-invitar" href="#" style="cursor:pointer;">Invitar usuario</a>
+                        <a class="btn btn-primary" data-create-content hidden href="documentos.html?nuevo=1">Crear documento</a>
+                        <a class="btn" data-create-content hidden href="documentos.html?tipo=wiki&amp;clase=2&amp;nuevo=1">Crear wiki</a>
+                        <a class="btn" id="quick-invitar" href="usuarios.html">Invitar usuario</a>
                     </div>
-                    <p class="coming-soon">Próximamente</p>
                 </section>
             </main>
         </div>

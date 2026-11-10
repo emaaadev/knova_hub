@@ -1,579 +1,139 @@
-
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Gestión del conocimiento de Knova Hub.">
-
-    <title>Documentos — Knova Hub</title>
-
-    <!-- ESTILOS -->
+    <title>Conocimiento — Knova Hub</title>
     <link rel="stylesheet" href="./css/dashboard.css">
     <link rel="stylesheet" href="./css/manage.css">
-
-    <!-- JAVASCRIPT -->
     <script src="./js/app.js" defer></script>
     <script src="./js/documentos.js" defer></script>
 </head>
-
 <body>
-
-    <a class="skip-link" href="#contenido">
-        Saltar al contenido
-    </a>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
 
     <div class="shell">
-
-        <!-- MENÚ LATERAL -->
         <aside class="sidebar">
-
-            <a class="sidebar-logo"
-               href="../home/index.html"
-               aria-label="Knova Hub — Inicio">
-
-                <img src="../assets/logo.png"
-                     alt="Knova Hub"
-                     width="1983"
-                     height="793">
+            <a class="sidebar-logo" href="../home/index.html" aria-label="Knova Hub — Inicio">
+                <img src="../assets/logo.png" alt="Knova Hub" width="1983" height="793">
             </a>
 
             <nav class="side-nav" aria-label="Navegación del panel">
-
-                <a class="nav-item"
-                   data-page="dashboard"
-                   href="dashboard.html">
-                    Inicio
-                </a>
-
-                <a class="nav-item"
-                   data-page="usuarios"
-                   data-role-gestion
-                   href="usuarios.html">
-                    Usuarios
-                </a>
-
-                <a class="nav-item"
-                   data-page="solicitudes"
-                   data-role-gestion
-                   href="solicitudes.html">
-                    Solicitudes
-                </a>
-
-                <a class="nav-item"
-                   data-page="departamentos"
-                   data-role-gestion
-                   href="departamentos.html">
-                    Departamentos
-                </a>
-
-                <a class="nav-item"
-                   data-page="documentos"
-                   href="documentos.html">
-                    Documentos
-                </a>
-
-                <a class="nav-item"
-                   href="documentos.html?tipo=wiki">
-                    Wikis y minutas
-                </a>
-
-                <a class="nav-item" href="#">
-                    Recomendaciones (IA)
-                </a>
-
+                <a class="nav-item" data-page="dashboard" href="dashboard.html">Inicio</a>
+                <a class="nav-item" data-page="usuarios" data-role-gestion href="usuarios.html">Usuarios</a>
+                <a class="nav-item" data-page="solicitudes" data-role-gestion href="solicitudes.html">Solicitudes</a>
+                <a class="nav-item" data-page="departamentos" data-role-gestion href="departamentos.html">Departamentos</a>
+                <a class="nav-item" data-page="documentos" href="documentos.html">Documentos</a>
+                <a class="nav-item" href="documentos.html?tipo=wiki">Wikis y minutas</a>
+                <a class="nav-item" href="#">Recomendaciones (IA)</a>
             </nav>
-
         </aside>
 
-        <!-- CONTENIDO PRINCIPAL -->
         <div class="main">
-
-            <!-- BARRA SUPERIOR -->
             <header class="topbar">
-
-                <h2 class="topbar-title">
-                    Documentos
-                </h2>
+                <h2 class="topbar-title" id="module-title">Conocimiento</h2>
 
                 <div class="user-menu">
-
                     <div class="user-info">
-
-                        <span class="user-name"
-                              id="user-name"></span>
-
-                        <span class="role-badge"
-                              id="user-role"></span>
-
+                        <span class="user-name" id="user-name"></span>
+                        <span class="role-badge" id="user-role"></span>
                     </div>
-
-                    <button type="button"
-                            class="logout-btn"
-                            id="logout">
-                        Cerrar sesión
-                    </button>
-
+                    <button type="button" class="logout-btn" id="logout">Cerrar sesión</button>
                 </div>
-
             </header>
 
             <main class="dashboard-content" id="contenido">
-
-                <!-- ENCABEZADO -->
                 <div class="page-header">
-
                     <div>
-
-                        <h1>Gestión del conocimiento</h1>
-
-                        <p class="page-subtitle"
-                           id="list-subtitle">
-                            Cargando documentos…
-                        </p>
-
+                        <h1 id="page-title">Documentos</h1>
+                        <p class="page-subtitle" id="list-status" role="status"></p>
                     </div>
-
-
-                    <div class="toolbar">
-
-                        <!-- IR A CATEGORÍAS -->
-                        <a href="categorias.html"
-                           class="btn"
-                           id="btn-categorias"
-                           hidden>
-                            Categorías
-                        </a>
-
-                        <!-- CREAR DOCUMENTO -->
-                        <button type="button"
-                                class="btn btn-primary"
-                                id="btn-nuevo-documento"
-                                hidden>
-                            Nuevo documento
-                        </button>
-
-                        <!-- ACTUALIZAR LISTADO -->
-                        <button type="button"
-                                class="btn"
-                                id="btn-recargar">
-                            Actualizar
-                        </button>
-
-                    </div>
-
-
+                    <button type="button" class="btn btn-primary" id="new-item" hidden>Crear</button>
                 </div>
-
-                <!-- BUSCADOR Y FILTROS -->
-                <section class="card"
-                         aria-label="Buscar documentos">
-
+                <p class="form-message is-error" id="list-error" role="alert" hidden></p>
+                <section class="card" aria-label="Listado de conocimiento">
                     <div class="form-grid">
-
-                        <div class="field">
-
-                            <label for="buscar-documentos">
-                                Buscar documento
-                            </label>
-
-                            <input type="search"
-                                   id="buscar-documentos"
-                                   placeholder="Buscar por título, descripción o categoría…">
-
-                        </div>
-
-                        <div class="field">
-
-                            <label for="filtrar-tipo">
-                                Tipo de contenido
-                            </label>
-
-                            <select id="filtrar-tipo">
-
-                                <option value="">
-                                    Todos
-                                </option>
-
-                                <option value="1">
-                                    Documento
-                                </option>
-
-                                <option value="2">
-                                    Wiki
-                                </option>
-
-                                <option value="3">
-                                    Minuta
-                                </option>
-
+                        <label class="field">Buscar <input type="search" id="search" placeholder="Título, descripción o contenido"></label>
+                        <label class="field" id="type-filter" hidden>Tipo
+                            <select id="filter-type">
+                                <option value="">Wikis y minutas</option>
+                                <option value="2">Wiki</option>
+                                <option value="3">Minuta</option>
                             </select>
-
-                        </div>
-
+                        </label>
+                        <label class="field">Departamento <select id="filter-department"></select></label>
+                        <label class="field">Categoría <select id="filter-category"></select></label>
+                        <label class="field">Etiqueta <select id="filter-tag"></select></label>
                     </div>
-
-                </section>
-
-                <!-- LISTADO DE DOCUMENTOS -->
-                <section class="card"
-                         aria-label="Listado de documentos">
-
                     <div class="table-wrap">
-
                         <table class="table">
-
-                            <thead>
-
-                                <tr>
-                                    <th>Título</th>
-                                    <th>Tipo</th>
-                                    <th>Visibilidad</th>
-                                    <th>Categoría</th>
-                                    <th>Autor</th>
-                                    <th>Acciones</th>
-                                </tr>
-
-                            </thead>
-
-                            <tbody id="cuerpo-documentos">
-                            </tbody>
-
+                            <thead><tr>
+                                <th>Título</th><th>Tipo</th><th>Visibilidad</th><th>Categoría</th><th>Autor</th><th>Acciones</th>
+                            </tr></thead>
+                            <tbody id="items"></tbody>
                         </table>
-
                     </div>
-
-                    <p class="empty-state"
-                       id="vacio-documentos"
-                       hidden>
-                        No hay documentos para mostrar.
-                    </p>
-
-                    <p class="form-message"
-                       id="error-documentos"
-                       role="alert"
-                       hidden>
-                    </p>
-
                 </section>
-
-                <!-- FORMULARIO CREAR Y EDITAR -->
-                <section class="card"
-                         id="form-documento"
-                         aria-label="Formulario de documento"
-                         hidden>
-
-                    <h2 id="form-documento-titulo">
-                        Nuevo documento
-                    </h2>
-
-                    <form id="form-documento-campos">
-
+                <section class="card" id="editor" hidden>
+                    <h2 id="editor-title"></h2>
+                    <form id="editor-form">
                         <div class="form-grid">
-
-                            <!-- TÍTULO -->
-                            <div class="field">
-
-                                <label for="doc-titulo">
-                                    Título *
-                                </label>
-
-                                <input type="text"
-                                       id="doc-titulo"
-                                       maxlength="200"
-                                       required>
-
-                            </div>
-
-                            <!-- TIPO -->
-                            <div class="field">
-
-                                <label for="doc-tipo">
-                                    Tipo *
-                                </label>
-
-                                <select id="doc-tipo">
-
-                                    <option value="1">
-                                        Documento
-                                    </option>
-
-                                    <option value="2">
-                                        Wiki
-                                    </option>
-
-                                    <option value="3">
-                                        Minuta
-                                    </option>
-
+                            <label class="field">Título <input id="title" maxlength="200" required></label>
+                            <label class="field" id="type-field">Tipo
+                                <select id="type">
+                                    <option value="2">Wiki</option>
+                                    <option value="3">Minuta</option>
                                 </select>
-
-                            </div>
-
-                            <!-- VISIBILIDAD -->
-                            <div class="field">
-
-                                <label for="doc-visibilidad">
-                                    Visibilidad *
-                                </label>
-
-                                <select id="doc-visibilidad">
-
-                                    <option value="1">
-                                        General
-                                    </option>
-
-                                    <option value="2">
-                                        Departamento
-                                    </option>
-
-                                </select>
-
-                            </div>
-
-                            <!-- DEPARTAMENTO -->
-                            <div class="field">
-
-                                <label for="doc-departamento">
-                                    Departamento
-                                </label>
-
-                                <select id="doc-departamento">
-
-                                    <option value="">
-                                        Seleccionar departamento
-                                    </option>
-
-                                </select>
-
-                            </div>
-
-                            <!-- CATEGORÍA -->
-                            <div class="field">
-
-                                <label for="doc-categoria">
-                                    Categoría *
-                                </label>
-
-                                <select id="doc-categoria" required>
-
-                                    <option value="">
-                                        Seleccionar categoría
-                                    </option>
-
-                                </select>
-
-                            </div>
-
-                            <!-- ETIQUETAS -->
-                            <div class="field">
-
-                                <label for="doc-etiquetas">
-                                    Etiquetas
-                                </label>
-
-                                <select id="doc-etiquetas"
-                                        multiple
-                                        size="4">
-                                </select>
-
-                                <p class="page-subtitle">
-                                    Usa Ctrl + clic para seleccionar varias etiquetas.
-                                </p>
-
-                            </div>
-
-                            <!-- DESCRIPCIÓN -->
-                            <div class="field">
-
-                                <label for="doc-descripcion">
-                                    Descripción
-                                </label>
-
-                                <textarea id="doc-descripcion"
-                                          rows="3"></textarea>
-
-                            </div>
-
-                            <!-- CONTENIDO -->
-                            <div class="field">
-
-                                <label for="doc-contenido">
-                                    Contenido
-                                </label>
-
-                                <textarea id="doc-contenido"
-                                          rows="6"></textarea>
-
-                            </div>
-
-                        </div>
-
-                        <p class="page-subtitle" id="doc-aviso">
-                            Los documentos generales no tienen departamento.
-                        </p>
-
-                        <p class="form-message"
-                           id="doc-mensaje"
-                           role="alert"
-                           hidden>
-                        </p>
-
-                        <!-- BOTONES DEL FORMULARIO -->
-                        <div class="form-actions">
-
-                            <button type="submit"
-                                    class="btn btn-primary"
-                                    id="doc-guardar">
-                                Guardar
-                            </button>
-
-                            <button type="button"
-                                    class="btn"
-                                    id="doc-cancelar">
-                                Cancelar
-                            </button>
-
-                        </div>
-
-                    </form>
-
-                </section>
-
-                <!-- DETALLES DEL DOCUMENTO -->
-                <section class="card"
-                         id="detalle-documento"
-                         aria-label="Detalle del documento"
-                         hidden>
-
-                    <div class="page-header">
-
-                        <h2>Detalle del documento</h2>
-
-                        <button type="button"
-                                class="btn"
-                                id="cerrar-detalle">
-                            Cerrar
-                        </button>
-
-                    </div>
-
-                    <!-- INFORMACIÓN GENERAL -->
-                    <h3 id="detalle-titulo"></h3>
-
-                    <p id="detalle-descripcion"></p>
-
-                    <p class="page-subtitle"
-                       id="detalle-metadata">
-                    </p>
-
-                    <div id="detalle-contenido"
-                         style="
-                            white-space: pre-wrap;
-                            overflow-wrap: anywhere;
-                            margin-top: 16px;
-                         ">
-                    </div>
-
-                    <p class="page-subtitle"
-                       id="detalle-archivo"
-                       style="margin-top: 16px;">
-                    </p>
-
-                    <!-- GESTIÓN DE ARCHIVOS ADJUNTOS -->
-                    <section id="seccion-archivo"
-                             style="margin-top: 20px;">
-
-                        <h3>Archivo adjunto</h3>
-
-                        <p id="archivo-informacion"
-                           class="page-subtitle">
-                            Cargando información…
-                        </p>
-
-                        <!-- SELECCIONAR ARCHIVO -->
-                        <div id="archivo-subida"
-                             class="field"
-                             hidden>
-
-                            <label for="archivo-documento">
-                                Seleccionar archivo
                             </label>
-
-                            <input type="file"
-                                   id="archivo-documento"
-                                   accept=".pdf,.docx,.txt,.md">
-
-                            <p class="page-subtitle">
-                                Formatos permitidos: PDF, DOCX, TXT y MD.
-                                Tamaño máximo: 20 MB.
-                            </p>
-
+                            <label class="field">Visibilidad
+                                <select id="visibility">
+                                    <option value="1">General</option>
+                                    <option value="2">Departamento</option>
+                                </select>
+                            </label>
+                            <label class="field">Departamento <select id="department"></select></label>
+                            <label class="field">Categoría <select id="category"></select></label>
+                            <label class="field">Etiquetas
+                                <select id="tags" multiple size="4"></select>
+                                <span class="inline-note">Puedes seleccionar varias etiquetas.</span>
+                            </label>
                         </div>
-
-                        <!-- BOTONES DE ARCHIVOS -->
+                        <div class="form-grid">
+                            <label class="field">Descripción <textarea id="description" rows="3" maxlength="1000"></textarea></label>
+                            <label class="field">Contenido <textarea id="content" rows="7"></textarea></label>
+                        </div>
+                        <div class="form-grid" id="file-field">
+                            <label class="field">Archivo adjunto
+                                <input type="file" id="file" accept=".pdf,.docx,.txt,.md" aria-describedby="file-note">
+                                <span id="file-note" class="inline-note"></span>
+                            </label>
+                        </div>
+                        <p class="form-message is-error" id="editor-error" role="alert" hidden></p>
                         <div class="form-actions">
-
-                            <button type="button"
-                                    class="btn btn-primary"
-                                    id="btn-subir-archivo"
-                                    hidden>
-                                Subir archivo
-                            </button>
-
-                            <button type="button"
-                                    class="btn"
-                                    id="btn-descargar-archivo"
-                                    hidden>
-                                Descargar archivo
-                            </button>
-
-                            <button type="button"
-                                    class="btn btn-danger"
-                                    id="btn-eliminar-archivo"
-                                    hidden>
-                                Eliminar archivo
-                            </button>
-
+                            <button class="btn btn-primary" id="save" type="submit">Guardar</button>
+                            <button class="btn" id="cancel" type="button">Cancelar</button>
                         </div>
-
-                        <p id="archivo-mensaje"
-                           class="form-message"
-                           role="alert"
-                           hidden>
-                        </p>
-
-                    </section>
-
-                    <!-- ACCIONES DEL DOCUMENTO -->
-                    <div class="form-actions"
-                         style="margin-top: 20px;">
-
-                        <button type="button"
-                                class="btn btn-primary"
-                                id="detalle-editar"
-                                hidden>
-                            Editar documento
-                        </button>
-
-                        <button type="button"
-                                class="btn btn-danger"
-                                id="detalle-eliminar"
-                                hidden>
-                            Eliminar documento
-                        </button>
-
-                    </div>
-
+                    </form>
                 </section>
-
+                <section class="card" id="detail" hidden>
+                    <div class="page-header">
+                        <h2 id="detail-title" tabindex="-1"></h2>
+                        <button class="btn" id="close-detail" type="button">Cerrar</button>
+                    </div>
+                    <p class="page-subtitle" id="detail-meta"></p>
+                    <p class="knowledge-text" id="detail-description"></p>
+                    <div class="knowledge-text" id="detail-content"></div>
+                    <p class="inline-note" id="detail-file"></p>
+                    <p class="form-message is-error" id="detail-error" role="alert" hidden></p>
+                    <div class="form-actions toolbar">
+                        <button class="btn" id="download" type="button" hidden>Descargar archivo</button>
+                        <button class="btn" id="remove-file" type="button" hidden>Quitar archivo</button>
+                        <button class="btn" id="edit" type="button" hidden>Editar</button>
+                        <button class="btn btn-danger" id="delete" type="button" hidden>Eliminar</button>
+                    </div>
+                </section>
             </main>
-
         </div>
-
     </div>
-
 </body>
-
 </html>

@@ -1,6 +1,6 @@
 
 using KnovaHub.ApplicationLayer.DTOs;
-using KnovaHub.DomainLayer.Entities;
+using KnovaHub.DomainLayer.Repository;
 
 namespace KnovaHub.ApplicationLayer.Contract;
 
@@ -10,6 +10,8 @@ public interface IDocumentService
     Task<List<DocumentDto>> GetAllAsync(
         Actor actor,
         DocumentFilterDto? filters = null);
+
+    Task<DocumentSummary> GetSummaryAsync(Actor actor);
 
     // Obtener un documento por ID
     Task<DocumentDto> GetByIdAsync(

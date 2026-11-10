@@ -131,10 +131,10 @@ public class TagService : ITagService
                 "El nombre de la etiqueta es obligatorio.");
         }
 
-        if (value.Length > 100)
+        if (value.Length > 50)
         {
             throw new DataValidationException(
-                "El nombre de la etiqueta no puede superar los 100 caracteres.");
+                "El nombre de la etiqueta no puede superar los 50 caracteres.");
         }
 
         return value;

@@ -1,7 +1,9 @@
 
 using KnovaHub.DomainLayer.Entities;
+using KnovaHub.DomainLayer.Exceptions;
 using KnovaHub.DomainLayer.Repository;
 using KnovaHub.InfrastructureLayer.Data;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace KnovaHub.InfrastructureLayer.Repositories;
@@ -42,7 +44,7 @@ public class CategoryRepository : ICategoryRepository
     public async Task<Category> AddAsync(Category category)
     {
         _context.Categories.Add(category);
-        await _context.SaveChangesAsync();
+        await SaveAsync();
 
         return category;
     }
@@ -50,6 +52,18 @@ public class CategoryRepository : ICategoryRepository
     public Task UpdateAsync(Category category)
     {
         _context.Categories.Update(category);
-        return _context.SaveChangesAsync();
+        return SaveAsync();
+    }
+
+    private async Task SaveAsync()
+    {
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is SqlException { Number: 2601 or 2627 })
+        {
+            throw new DuplicateEntityException("name", "Ya existe una categoría con ese nombre en la empresa.");
+        }
     }
 }

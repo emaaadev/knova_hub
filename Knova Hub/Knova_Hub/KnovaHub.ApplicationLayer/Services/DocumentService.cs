@@ -42,8 +42,7 @@ public class DocumentService : IDocumentService
         DocumentFilterDto? filters = null)
     {
         int companyId = GetCompanyId(actor);
-        await GetActiveUserAsync(actor, companyId);
-
+        var departmentIds = await GetVisibleDepartmentIdsAsync(actor, companyId);
         filters ??= new DocumentFilterDto();
 
         var documents = await _documents.GetByCompanyAsync(
@@ -52,17 +51,32 @@ public class DocumentService : IDocumentService
             filters.CategoryId,
             filters.TagId,
             filters.DepartmentId,
-            filters.Search);
+            filters.Search,
+            departmentIds);
 
-        var visible = new List<Document>();
+        return documents.Select(ToDto).ToList();
+    }
 
-        foreach (var document in documents)
+    public async Task<DocumentSummary> GetSummaryAsync(Actor actor)
+    {
+        int companyId = GetCompanyId(actor);
+        var departmentIds = await GetVisibleDepartmentIdsAsync(actor, companyId);
+        return await _documents.GetSummaryAsync(companyId, departmentIds);
+    }
+
+    private async Task<int[]?> GetVisibleDepartmentIdsAsync(Actor actor, int companyId)
+    {
+        var user = await GetActiveUserAsync(actor, companyId);
+        if (actor.Role == SystemRoles.AdminEmpresaRoleName)
+            return null;
+
+        if (actor.Role == SystemRoles.SupervisorRoleName)
         {
-            if (await CanReadAsync(actor, document))
-                visible.Add(document);
+            var departments = await _departments.GetSupervisedAsync(actor.UserId);
+            return departments.Where(d => d.CompanyId == companyId).Select(d => d.Id).ToArray();
         }
 
-        return visible.Select(ToDto).ToList();
+        return user.DepartmentId is int id ? new[] { id } : Array.Empty<int>();
     }
 
     public async Task<DocumentDto> GetByIdAsync(
@@ -102,7 +116,7 @@ public class DocumentService : IDocumentService
             CompanyId = companyId,
             AuthorId = actor.UserId,
             Title = ValidTitle(dto.Title),
-            Description = dto.Description?.Trim(),
+            Description = ValidDescription(dto.Description),
             Content = dto.Content,
             Type = dto.Type,
             Visibility = dto.Visibility,
@@ -151,10 +165,11 @@ public class DocumentService : IDocumentService
             dto.Visibility,
             dto.DepartmentId,
             dto.CategoryId,
-            dto.TagIds);
+            dto.TagIds,
+            document);
 
         document.Title = ValidTitle(dto.Title);
-        document.Description = dto.Description?.Trim();
+        document.Description = ValidDescription(dto.Description);
         document.Content = dto.Content;
         document.Type = dto.Type;
         document.Visibility = dto.Visibility;
@@ -203,16 +218,14 @@ public class DocumentService : IDocumentService
 
         await EnsureCanWriteAsync(actor, document);
 
-        // La coordinación de eliminación de archivos físicos
-        // se integrará antes de habilitar este método en la API.
-        if (!string.IsNullOrWhiteSpace(document.StorageKey))
-        {
-            throw new DataValidationException(
-                "La eliminación de documentos con archivos adjuntos " +
-                "todavía no está habilitada.");
-        }
-
+        string? storageKey = document.StorageKey;
         await _documents.DeleteAsync(document);
+
+        if (!string.IsNullOrWhiteSpace(storageKey))
+        {
+            try { await _fileStorage.DeleteAsync(storageKey, CancellationToken.None); }
+            catch (IOException) { /* Requiere limpieza posterior. */ }
+        }
     }
 
     // Adjunta o reemplaza el archivo de un documento existente.
@@ -397,7 +410,8 @@ public class DocumentService : IDocumentService
         DocumentVisibility visibility,
         int? departmentId,
         int? categoryId,
-        List<int>? tagIds)
+        List<int>? tagIds,
+        Document? existing = null)
     {
         if (!Enum.IsDefined(typeof(DocumentType), type))
             throw new DataValidationException(
@@ -426,7 +440,7 @@ public class DocumentService : IDocumentService
             var department = await _departments.GetByIdAsync(
                 companyId, departmentId.Value);
 
-            if (department == null || !department.IsActive)
+            if (department == null || (!department.IsActive && existing?.DepartmentId != departmentId))
                 throw new DataValidationException(
                     "El departamento no existe o está inactivo.");
 
@@ -446,7 +460,7 @@ public class DocumentService : IDocumentService
             }
         }
 
-        if (categoryId.HasValue)
+        if (categoryId.HasValue && existing?.CategoryId != categoryId)
         {
             var category = await _categories.GetByIdAsync(
                 companyId, categoryId.Value);
@@ -456,9 +470,8 @@ public class DocumentService : IDocumentService
                     "La categoría no existe o está inactiva.");
         }
 
-        var distinctIds = (tagIds ?? new List<int>())
-            .Distinct()
-            .ToList();
+        var existingTagIds = existing?.DocumentTags.Select(dt => dt.TagId) ?? Enumerable.Empty<int>();
+        var distinctIds = (tagIds ?? new List<int>()).Except(existingTagIds).ToList();
 
         if (distinctIds.Count > 0)
         {
@@ -596,6 +609,14 @@ public class DocumentService : IDocumentService
             throw new DataValidationException(
                 "El título no puede superar los 200 caracteres.");
 
+        return value;
+    }
+
+    private static string? ValidDescription(string? description)
+    {
+        var value = description?.Trim();
+        if (value?.Length > 1000)
+            throw new DataValidationException("La descripción no puede superar los 1000 caracteres.");
         return value;
     }
 
