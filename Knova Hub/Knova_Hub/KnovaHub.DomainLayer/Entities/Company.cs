@@ -16,4 +16,7 @@ public class Company
 
     public ICollection<User> Users { get; set; } = new List<User>();
     public ICollection<Department> Departments { get; set; } = new List<Department>();
+    public ICollection<Document> Documents { get; set; } = new List<Document>();
+    public ICollection<Category> Categories { get; set; } = new List<Category>();
+    public ICollection<Tag> Tags { get; set; } = new List<Tag>();
 }

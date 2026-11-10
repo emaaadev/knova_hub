@@ -26,4 +26,7 @@ public class User
 
     /// <summary>Departamentos que supervisa (solo para el rol Supervisor).</summary>
     public ICollection<SupervisorDepartment> SupervisedDepartments { get; set; } = new List<SupervisorDepartment>();
+
+    /// <summary>Documentos creados por este usuario.</summary>
+    public ICollection<Document> AuthoredDocuments { get; set; } = new List<Document>();
 }
