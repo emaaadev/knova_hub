@@ -427,3 +427,7 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+
+# Archivos privados del módulo de conocimiento
+**/PrivateStorage/

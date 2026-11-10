@@ -6,6 +6,7 @@ using KnovaHub.ApplicationLayer.Services;
 using KnovaHub.DomainLayer.Repository;
 using KnovaHub.InfrastructureLayer.Data;
 using KnovaHub.InfrastructureLayer.Repositories;
+using KnovaHub.InfrastructureLayer.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -26,14 +27,47 @@ if (string.IsNullOrWhiteSpace(jwt.Key) || jwt.Key.Length < 32)
 builder.Services.AddSingleton(jwt);
 
 // Inyección de dependencias
+
+// Repositorios existentes
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 builder.Services.AddScoped<IRegistrationRequestRepository, RegistrationRequestRepository>();
+
+// Servicios existentes
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IUserRoleService, UserRoleService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRegistrationRequestService, RegistrationRequestService>();
+
+
+// Repositorios de documentos, categorías y etiquetas
+builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<ITagRepository, TagRepository>();
+
+// Servicios de documentos, categorías y etiquetas
+builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<ITagService, TagService>();
+
+
+// Almacenamiento privado de archivos del módulo de conocimiento.
+// Se utiliza una carpeta fuera de wwwroot para impedir el acceso público.
+builder.Services.AddSingleton<IFileStorage>(_ =>
+{
+    var storagePath = builder.Configuration["FileStorage:Path"];
+
+    if (string.IsNullOrWhiteSpace(storagePath))
+    {
+        storagePath = Path.Combine(
+            builder.Environment.ContentRootPath,
+            "PrivateStorage",
+            "Documents");
+    }
+
+    return new LocalFileStorage(storagePath);
+});
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

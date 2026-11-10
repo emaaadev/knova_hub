@@ -254,3 +254,124 @@
     color: var(--muted);
     margin-top: 6px;
 }
+
+/* ==========================================
+   KNOVA HUB - NOTIFICACIONES TOAST
+========================================== */
+
+.toast-container {
+    position: fixed !important;
+    top: 25px;
+    right: 25px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: min(390px, calc(100vw - 32px));
+    pointer-events: none;
+}
+
+.toast {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background: #ffffff;
+    padding: 18px 20px;
+    border: 1px solid #e5e7eb;
+    border-left: 5px solid #16a34a;
+    border-radius: 14px;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.16);
+    pointer-events: auto;
+    animation: toastEntrada 0.35s ease forwards;
+}
+
+    .toast.error {
+        border-left-color: #dc2626;
+    }
+
+.toast-icono {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #dcfce7;
+    color: #15803d;
+    font-size: 23px;
+    font-weight: bold;
+}
+
+.toast.error .toast-icono {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.toast-contenido {
+    flex: 1;
+    min-width: 0;
+}
+
+.toast-titulo {
+    font-size: 15px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 5px;
+}
+
+.toast-mensaje {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #475467;
+    overflow-wrap: anywhere;
+}
+
+.toast-cerrar {
+    border: none;
+    background: transparent;
+    font-size: 22px;
+    line-height: 1;
+    color: #667085;
+    cursor: pointer;
+}
+
+    .toast-cerrar:hover {
+        color: #111827;
+    }
+
+@keyframes toastEntrada {
+    from {
+        opacity: 0;
+        transform: translateX(40px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@media (max-width: 600px) {
+    .toast-container {
+        top: 15px;
+        right: 16px;
+        left: 16px;
+        width: auto;
+    }
+}
+
+
+
+/* Botón eliminar categoría */
+
+.btn-eliminar-categoria {
+    background: #fff1f2;
+    color: #be123c;
+    border: 1px solid #fecdd3;
+}
+
+    .btn-eliminar-categoria:hover {
+        background: #ffe4e6;
+        color: #9f1239;
+    }

@@ -95,7 +95,31 @@ public class CategoryService : ICategoryService
 		return ToDto(category);
 	}
 
-	private async Task<Category> FindAsync(
+
+    public async Task DeactivateAsync(
+        Actor actor,
+        int categoryId)
+    {
+        EnsureAdminEmpresa(actor);
+
+        int companyId = GetCompanyId(actor);
+
+        var category = await FindAsync(companyId, categoryId);
+
+        if (!category.IsActive)
+        {
+            throw new DataValidationException(
+                "La categoría ya se encuentra desactivada.");
+        }
+
+        category.IsActive = false;
+        category.UpdatedAt = DateTime.UtcNow;
+
+        await _categories.UpdateAsync(category);
+    }
+
+
+    private async Task<Category> FindAsync(
 		int companyId,
 		int categoryId)
 	{

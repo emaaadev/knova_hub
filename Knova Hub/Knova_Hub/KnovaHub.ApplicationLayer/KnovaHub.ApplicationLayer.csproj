@@ -16,6 +16,11 @@
   </ItemGroup>
 
   <ItemGroup>
+	<Folder Include="Interfaces\" />
+	<Folder Include="Models\" />
+	</ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\KnovaHub.DomainLayer\KnovaHub.DomainLayer.csproj" />
   </ItemGroup>
 

@@ -32,4 +32,6 @@ public interface ICategoryService
         Actor actor,
         int categoryId,
         UpdateCategoryDto dto);
+
+    Task DeactivateAsync(Actor actor, int categoryId);
 }

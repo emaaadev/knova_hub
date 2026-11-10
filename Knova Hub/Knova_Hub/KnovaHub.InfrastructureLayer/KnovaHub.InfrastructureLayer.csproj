@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\KnovaHub.DomainLayer\KnovaHub.DomainLayer.csproj" />
+	<ProjectReference Include="..\KnovaHub.ApplicationLayer\KnovaHub.ApplicationLayer.csproj" />
   </ItemGroup>
 
   <ItemGroup>
