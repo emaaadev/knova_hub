@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Gestión de departamentos de Knova Hub.">
+    <title>Departamentos — Knova Hub</title>
+
+    <link rel="stylesheet" href="./css/dashboard.css">
+    <link rel="stylesheet" href="./css/manage.css">
+    <script src="./js/app.js" defer></script>
+    <script src="./js/departamentos.js" defer></script>
+</head>
+
+<body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+    <div class="shell">
+        <aside class="sidebar">
+            <a class="sidebar-logo" href="../home/index.html" aria-label="Knova Hub — Inicio">
+                <img src="../assets/logo.png" alt="Knova Hub" width="1983" height="793">
+            </a>
+
+            <nav class="side-nav" aria-label="Navegación del panel">
+                <a class="nav-item" data-page="dashboard" href="dashboard.html">Inicio</a>
+                <a class="nav-item" data-page="usuarios" data-role-gestion href="usuarios.html">Usuarios</a>
+                <a class="nav-item" data-page="solicitudes" data-role-gestion href="solicitudes.html">Solicitudes</a>
+                <a class="nav-item" data-page="departamentos" data-role-gestion href="departamentos.html">Departamentos</a>
+                <a class="nav-item" data-page="documentos" href="documentos.html">Documentos</a>
+                <a class="nav-item" href="documentos.html?tipo=wiki">Wikis y minutas</a>
+                <a class="nav-item" href="#">Recomendaciones (IA)</a>
+            </nav>
+        </aside>
+
+        <div class="main">
+            <header class="topbar">
+                <h2 class="topbar-title">Departamentos</h2>
+
+                <div class="user-menu">
+                    <div class="user-info">
+                        <span class="user-name" id="user-name"></span>
+                        <span class="role-badge" id="user-role"></span>
+                    </div>
+                    <button type="button" class="logout-btn" id="logout">Cerrar sesión</button>
+                </div>
+            </header>
+
+            <main class="dashboard-content" id="contenido">
+                <div class="page-header">
+                    <div>
+                        <h1>Departamentos</h1>
+                        <p class="page-subtitle" id="list-subtitle">Cargando…</p>
+                    </div>
+                    <div class="toolbar">
+                        <button type="button" class="btn btn-primary" id="btn-nuevo" hidden>Nuevo departamento</button>
+                    </div>
+                </div>
+
+                <section class="card">
+                    <div class="table-wrap">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Estado</th>
+                                    <th id="col-acciones">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cuerpo-departamentos"></tbody>
+                        </table>
+                    </div>
+                    <p class="empty-state" id="vacio-departamentos" hidden>No hay departamentos.</p>
+                </section>
+
+                <section class="card" id="card-form" hidden>
+                    <h2 id="form-titulo">Nuevo departamento</h2>
+                    <div class="form-grid">
+                        <div class="field">
+                            <label for="f-nombre">Nombre <span class="req">*</span></label>
+                            <input type="text" id="f-nombre" autocomplete="off">
+                        </div>
+                        <div class="field" id="campo-activo">
+                            <label for="f-activo">Estado</label>
+                            <select id="f-activo">
+                                <option value="true">Activo</option>
+                                <option value="false">Inactivo</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-message" id="form-message" role="alert" hidden></div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary" id="btn-guardar">Guardar</button>
+                        <button type="button" class="btn" id="btn-cancelar">Cancelar</button>
+                    </div>
+                </section>
+
+                <section class="card" id="card-supervisores" hidden>
+                    <h2>Asignar departamentos a un supervisor</h2>
+                    <p class="page-subtitle">Selecciona un supervisor y marca los departamentos que gestionará.</p>
+
+                    <div class="form-grid">
+                        <div class="field">
+                            <label for="s-supervisor">Supervisor</label>
+                            <select id="s-supervisor"></select>
+                        </div>
+                    </div>
+
+                    <div id="s-departamentos" style="margin-top: 16px;"></div>
+                    <div class="form-message" id="s-message" role="alert" hidden></div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary" id="s-guardar">Guardar asignación</button>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+</body>
+
+</html>

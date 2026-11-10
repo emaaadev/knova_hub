@@ -66,4 +66,12 @@ public class DepartmentsController : ControllerBase
     {
         return Ok(await _departments.SetSupervisorDepartmentsAsync(CompanyId, supervisorId, dto));
     }
+
+    /// <summary>Departamentos que tiene asignados un Supervisor.</summary>
+    [HttpGet("~/api/supervisors/{supervisorId:int}/departments")]
+    [Authorize(Policy = Policies.AdminEmpresa)]
+    public async Task<ActionResult<List<DepartmentDto>>> GetSupervisorDepartments(int supervisorId)
+    {
+        return Ok(await _departments.GetSupervisedDepartmentsAsync(CompanyId, supervisorId));
+    }
 }

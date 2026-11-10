@@ -6,11 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <meta name="description"
-        content="Dashboard de Knova Hub para la gestión del conocimiento empresarial.">
+          content="Dashboard de Knova Hub para la gestión del conocimiento empresarial.">
 
     <title>Dashboard — Knova Hub</title>
 
     <link rel="stylesheet" href="./css/dashboard.css">
+    <script src="./js/app.js" defer></script>
     <script src="./js/dashboard.js" defer></script>
 </head>
 
@@ -24,11 +25,13 @@
             </a>
 
             <nav class="side-nav" aria-label="Navegación del panel">
-                <a class="nav-item is-active" href="#" aria-current="page">Inicio</a>
-                <a class="nav-item" href="#">Documentos</a>
-                <a class="nav-item" href="#">Wikis y minutas</a>
+                <a class="nav-item" data-page="dashboard" href="dashboard.html">Inicio</a>
+                <a class="nav-item" data-page="usuarios" data-role-gestion href="usuarios.html">Usuarios</a>
+                <a class="nav-item" data-page="solicitudes" data-role-gestion href="solicitudes.html">Solicitudes</a>
+                <a class="nav-item" data-page="departamentos" data-role-gestion href="departamentos.html">Departamentos</a>
+                <a class="nav-item" data-page="documentos" href="documentos.html">Documentos</a>
+                <a class="nav-item" href="documentos.html?tipo=wiki">Wikis y minutas</a>
                 <a class="nav-item" href="#">Recomendaciones (IA)</a>
-                <a class="nav-item admin-only" id="nav-usuarios" href="#" hidden>Usuarios</a>
             </nav>
         </aside>
 
@@ -98,7 +101,7 @@
                     <div class="quick-buttons">
                         <button type="button" class="quick-btn" disabled>Subir documento</button>
                         <button type="button" class="quick-btn" disabled>Crear wiki</button>
-                        <button type="button" class="quick-btn" disabled>Invitar usuario</button>
+                        <a class="quick-btn" id="quick-invitar" href="#" style="cursor:pointer;">Invitar usuario</a>
                     </div>
                     <p class="coming-soon">Próximamente</p>
                 </section>

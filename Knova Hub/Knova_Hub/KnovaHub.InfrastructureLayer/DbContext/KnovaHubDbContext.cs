@@ -14,6 +14,11 @@ public class KnovaHubDbContext : DbContext
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<Department> Departments => Set<Department>();
     public DbSet<SupervisorDepartment> SupervisorDepartments => Set<SupervisorDepartment>();
+    public DbSet<UserRegistrationRequest> UserRegistrationRequests => Set<UserRegistrationRequest>();
+    public DbSet<Document> Documents => Set<Document>();
+    public DbSet<Category> Categories => Set<Category>();
+    public DbSet<Tag> Tags => Set<Tag>();
+    public DbSet<DocumentTag> DocumentTags => Set<DocumentTag>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -39,6 +44,7 @@ public class KnovaHubDbContext : DbContext
                 t.HasCheckConstraint("CK_Departments_Name", "LEN(LTRIM(RTRIM([Name]))) > 0"));
 
             e.HasKey(d => d.Id);
+            e.HasAlternateKey(d => new { d.Id, d.CompanyId }).HasName("AK_Departments_Id_CompanyId");
             e.Property(d => d.Name).IsRequired().HasMaxLength(100);
             e.Property(d => d.IsActive).IsRequired();
             e.Property(d => d.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
@@ -119,6 +125,7 @@ public class KnovaHubDbContext : DbContext
             e.Property(u => u.FullName).IsRequired().HasMaxLength(100);
             e.Property(u => u.Email).IsRequired().HasMaxLength(150);
             e.Property(u => u.PasswordHash).IsRequired().HasMaxLength(100);
+            e.Property(u => u.MustChangePassword).IsRequired();
             e.Property(u => u.IsActive).IsRequired();
             e.Property(u => u.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
 
@@ -139,6 +146,168 @@ public class KnovaHubDbContext : DbContext
             e.HasOne(u => u.Role)
                 .WithMany(r => r.Users)
                 .HasForeignKey(u => u.RoleId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Category>(e =>
+        {
+            e.ToTable("Categories", t =>
+            {
+                t.HasCheckConstraint("CK_Categories_Name", "LEN(LTRIM(RTRIM([Name]))) > 0");
+            });
+
+            e.HasKey(c => c.Id);
+            e.Property(c => c.Name).IsRequired().HasMaxLength(100);
+            e.Property(c => c.Description).HasMaxLength(500);
+            e.Property(c => c.IsActive).IsRequired();
+            e.Property(c => c.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            e.HasIndex(c => new { c.CompanyId, c.Name }).IsUnique()
+                .HasDatabaseName("IX_Categories_CompanyId_Name");
+
+            e.HasOne(c => c.Company)
+                .WithMany(c => c.Categories)
+                .HasForeignKey(c => c.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Tag>(e =>
+        {
+            e.ToTable("Tags", t =>
+            {
+                t.HasCheckConstraint("CK_Tags_Name", "LEN(LTRIM(RTRIM([Name]))) > 0");
+            });
+
+            e.HasKey(t => t.Id);
+            e.HasAlternateKey(t => new { t.Id, t.CompanyId }).HasName("AK_Tags_Id_CompanyId");
+            e.Property(t => t.Name).IsRequired().HasMaxLength(50);
+            e.Property(t => t.IsActive).IsRequired();
+            e.Property(t => t.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            e.HasIndex(t => new { t.CompanyId, t.Name }).IsUnique()
+                .HasDatabaseName("IX_Tags_CompanyId_Name");
+
+            e.HasOne(t => t.Company)
+                .WithMany(c => c.Tags)
+                .HasForeignKey(t => t.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Document>(e =>
+        {
+            e.ToTable("Documents", t =>
+            {
+                t.HasCheckConstraint("CK_Documents_Title", "LEN(LTRIM(RTRIM([Title]))) > 0");
+                t.HasCheckConstraint("CK_Documents_Type", "[Type] IN (1, 2, 3)");
+                t.HasCheckConstraint("CK_Documents_Visibility", "[Visibility] IN (1, 2)");
+                t.HasCheckConstraint("CK_Documents_VisibilityDepartment",
+                    "([Visibility] = 1 AND [DepartmentId] IS NULL) OR ([Visibility] = 2 AND [DepartmentId] IS NOT NULL)");
+                t.HasCheckConstraint("CK_Documents_FileMetadata",
+                    "(([StorageKey] IS NULL AND [OriginalFileName] IS NULL AND [ContentType] IS NULL AND [FileExtension] IS NULL AND [FileSizeBytes] IS NULL) OR ([StorageKey] IS NOT NULL AND [OriginalFileName] IS NOT NULL AND [ContentType] IS NOT NULL AND [FileExtension] IS NOT NULL AND [FileSizeBytes] > 0))");
+            });
+
+            e.HasKey(d => d.Id);
+            e.HasAlternateKey(d => new { d.Id, d.CompanyId }).HasName("AK_Documents_Id_CompanyId");
+            e.Property(d => d.Title).IsRequired().HasMaxLength(200);
+            e.Property(d => d.Description).HasMaxLength(1000);
+            e.Property(d => d.Type).HasConversion<int>().IsRequired();
+            e.Property(d => d.Visibility).HasConversion<int>().IsRequired();
+            e.Property(d => d.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            e.Property(d => d.OriginalFileName).HasMaxLength(255);
+            e.Property(d => d.StorageKey).HasMaxLength(100);
+            e.Property(d => d.ContentType).HasMaxLength(150);
+            e.Property(d => d.FileExtension).HasMaxLength(10);
+
+            e.HasIndex(d => new { d.CompanyId, d.CreatedAt })
+                .HasDatabaseName("IX_Documents_CompanyId_CreatedAt");
+            e.HasIndex(d => new { d.CompanyId, d.Type })
+                .HasDatabaseName("IX_Documents_CompanyId_Type");
+            e.HasIndex(d => new { d.CompanyId, d.CategoryId })
+                .HasDatabaseName("IX_Documents_CompanyId_CategoryId");
+            e.HasIndex(d => new { d.CompanyId, d.DepartmentId, d.Visibility })
+                .HasDatabaseName("IX_Documents_CompanyId_DepartmentId_Visibility");
+
+            // Empresa propietaria del documento.
+            e.HasOne(d => d.Company)
+                .WithMany(c => c.Documents)
+                .HasForeignKey(d => d.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // El autor debe pertenecer a la misma empresa.
+            e.HasOne(d => d.Author)
+                .WithMany(u => u.AuthoredDocuments)
+                .HasForeignKey(d => d.AuthorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // La categoría debe pertenecer a la misma empresa.
+            e.HasOne(d => d.Category)
+                .WithMany(c => c.Documents)
+                .HasForeignKey(d => new { d.CategoryId, d.CompanyId })
+                .HasPrincipalKey(c => new { c.Id, c.CompanyId })
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // El departamento debe pertenecer a la misma empresa.
+            e.HasOne(d => d.Department)
+                .WithMany(dep => dep.Documents)
+                .HasForeignKey(d => new { d.DepartmentId, d.CompanyId })
+                .HasPrincipalKey(dep => new { dep.Id, dep.CompanyId })
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<DocumentTag>(e =>
+        {
+            e.ToTable("DocumentTags");
+
+            e.HasKey(dt => new { dt.DocumentId, dt.TagId });
+
+            e.HasIndex(dt => dt.TagId)
+                .HasDatabaseName("IX_DocumentTags_TagId");
+
+            // El documento asociado debe pertenecer a la empresa indicada.
+            e.HasOne(dt => dt.Document)
+                .WithMany(d => d.DocumentTags)
+                .HasForeignKey(dt => new { dt.DocumentId, dt.CompanyId })
+                .HasPrincipalKey(d => new { d.Id, d.CompanyId })
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // La etiqueta asociada debe pertenecer a esa misma empresa.
+            e.HasOne(dt => dt.Tag)
+                .WithMany(t => t.DocumentTags)
+                .HasForeignKey(dt => new { dt.TagId, dt.CompanyId })
+                .HasPrincipalKey(t => new { t.Id, t.CompanyId })
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<UserRegistrationRequest>(e =>
+        {
+            e.ToTable("UserRegistrationRequests");
+            e.HasKey(r => r.Id);
+            e.Property(r => r.FullName).IsRequired().HasMaxLength(100);
+            e.Property(r => r.Email).IsRequired().HasMaxLength(150);
+            e.Property(r => r.Status).HasConversion<int>().IsRequired();
+            e.Property(r => r.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            e.HasIndex(r => r.Email).HasDatabaseName("IX_UserRegistrationRequests_Email");
+            e.HasIndex(r => new { r.CompanyId, r.Status }).HasDatabaseName("IX_UserRegistrationRequests_CompanyId_Status");
+
+            e.HasOne(r => r.Company)
+                .WithMany()
+                .HasForeignKey(r => r.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(r => r.Department)
+                .WithMany()
+                .HasForeignKey(r => r.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(r => r.RequestedBy)
+                .WithMany()
+                .HasForeignKey(r => r.RequestedById)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(r => r.ReviewedBy)
+                .WithMany()
+                .HasForeignKey(r => r.ReviewedById)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }

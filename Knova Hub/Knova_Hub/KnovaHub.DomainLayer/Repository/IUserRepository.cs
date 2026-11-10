@@ -19,4 +19,22 @@ public interface IUserRepository
     Task<bool> ChangeRoleKeepingCompanyAdminAsync(int companyId, int userId, int newRoleId, int? departmentId);
 
     Task UpdateDepartmentAsync(int userId, int departmentId);
+
+    /// <summary>Busca un usuario por Id sin filtro de empresa (para cambiar la propia contraseña).</summary>
+    Task<User?> GetByIdAsync(int userId);
+
+    /// <summary>Usuarios de una empresa, con su rol y departamento.</summary>
+    Task<List<User>> GetByCompanyAsync(int companyId);
+
+    /// <summary>Usuarios que pertenecen a alguno de los departamentos indicados.</summary>
+    Task<List<User>> GetByDepartmentIdsAsync(IReadOnlyCollection<int> departmentIds);
+
+    Task<User> AddAsync(User user);
+    Task UpdateAsync(User user);
+
+    /// <summary>Actualiza solo el hash de la contraseña (para el cambio de contraseña).</summary>
+    Task UpdatePasswordAsync(int userId, string newPasswordHash);
+
+    /// <summary>True si ya existe un usuario con ese correo (en cualquier empresa).</summary>
+    Task<bool> EmailExistsAsync(string email);
 }

@@ -84,6 +84,18 @@ public class DepartmentService : IDepartmentService
         return ids.Select(id => ToDto(deLaEmpresa[id])).OrderBy(d => d.Name).ToList();
     }
 
+    public async Task<List<DepartmentDto>> GetSupervisedDepartmentsAsync(int companyId, int supervisorId)
+    {
+        var supervisor = await _users.GetByIdInCompanyAsync(companyId, supervisorId)
+            ?? throw new NotFoundException("El usuario no existe en tu empresa.");
+
+        if (supervisor.RoleId != SystemRoles.SupervisorRoleId)
+            throw new DataValidationException("Solo los supervisores tienen departamentos asignados.");
+
+        var departments = await _departments.GetSupervisedAsync(supervisorId);
+        return departments.Select(ToDto).OrderBy(d => d.Name).ToList();
+    }
+
     private async Task<Department> FindAsync(int companyId, int departmentId)
     {
         return await _departments.GetByIdAsync(companyId, departmentId)

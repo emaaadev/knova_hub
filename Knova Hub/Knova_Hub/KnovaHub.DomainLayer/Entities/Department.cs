@@ -19,4 +19,7 @@ public class Department
 
     /// <summary>Supervisores que tienen asignado este departamento.</summary>
     public ICollection<SupervisorDepartment> Supervisors { get; set; } = new List<SupervisorDepartment>();
+
+    /// <summary>Documentos visibles únicamente para este departamento y el AdminEmpresa.</summary>
+    public ICollection<Document> Documents { get; set; } = new List<Document>();
 }

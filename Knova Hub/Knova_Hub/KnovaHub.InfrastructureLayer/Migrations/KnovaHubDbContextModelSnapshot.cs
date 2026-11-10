@@ -22,6 +22,49 @@ namespace KnovaHub.InfrastructureLayer.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("KnovaHub.DomainLayer.Entities.Category", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Categories_CompanyId_Name");
+
+                    b.ToTable("Categories", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Categories_Name", "LEN(LTRIM(RTRIM([Name]))) > 0");
+                        });
+                });
+
             modelBuilder.Entity("KnovaHub.DomainLayer.Entities.Company", b =>
                 {
                     b.Property<int>("Id")
@@ -127,6 +170,9 @@ namespace KnovaHub.InfrastructureLayer.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasAlternateKey("Id", "CompanyId")
+                        .HasName("AK_Departments_Id_CompanyId");
+
                     b.HasIndex("CompanyId", "Name")
                         .IsUnique()
                         .HasDatabaseName("IX_Departments_CompanyId_Name");
@@ -135,6 +181,131 @@ namespace KnovaHub.InfrastructureLayer.Migrations
                         {
                             t.HasCheckConstraint("CK_Departments_Name", "LEN(LTRIM(RTRIM([Name]))) > 0");
                         });
+                });
+
+            modelBuilder.Entity("KnovaHub.DomainLayer.Entities.Document", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AuthorId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Content")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ContentType")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int?>("DepartmentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("FileExtension")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<long?>("FileSizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("OriginalFileName")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("StorageKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Visibility")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("Id", "CompanyId")
+                        .HasName("AK_Documents_Id_CompanyId");
+
+                    b.HasIndex("AuthorId");
+
+                    b.HasIndex("CategoryId", "CompanyId");
+
+                    b.HasIndex("CompanyId", "CategoryId")
+                        .HasDatabaseName("IX_Documents_CompanyId_CategoryId");
+
+                    b.HasIndex("CompanyId", "CreatedAt")
+                        .HasDatabaseName("IX_Documents_CompanyId_CreatedAt");
+
+                    b.HasIndex("CompanyId", "Type")
+                        .HasDatabaseName("IX_Documents_CompanyId_Type");
+
+                    b.HasIndex("DepartmentId", "CompanyId");
+
+                    b.HasIndex("CompanyId", "DepartmentId", "Visibility")
+                        .HasDatabaseName("IX_Documents_CompanyId_DepartmentId_Visibility");
+
+                    b.ToTable("Documents", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Documents_FileMetadata", "(([StorageKey] IS NULL AND [OriginalFileName] IS NULL AND [ContentType] IS NULL AND [FileExtension] IS NULL AND [FileSizeBytes] IS NULL) OR ([StorageKey] IS NOT NULL AND [OriginalFileName] IS NOT NULL AND [ContentType] IS NOT NULL AND [FileExtension] IS NOT NULL AND [FileSizeBytes] > 0))");
+
+                            t.HasCheckConstraint("CK_Documents_Title", "LEN(LTRIM(RTRIM([Title]))) > 0");
+
+                            t.HasCheckConstraint("CK_Documents_Type", "[Type] IN (1, 2, 3)");
+
+                            t.HasCheckConstraint("CK_Documents_Visibility", "[Visibility] IN (1, 2)");
+
+                            t.HasCheckConstraint("CK_Documents_VisibilityDepartment", "([Visibility] = 1 AND [DepartmentId] IS NULL) OR ([Visibility] = 2 AND [DepartmentId] IS NOT NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("KnovaHub.DomainLayer.Entities.DocumentTag", b =>
+                {
+                    b.Property<int>("DocumentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TagId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int");
+
+                    b.HasKey("DocumentId", "TagId");
+
+                    b.HasIndex("TagId")
+                        .HasDatabaseName("IX_DocumentTags_TagId");
+
+                    b.HasIndex("DocumentId", "CompanyId");
+
+                    b.HasIndex("TagId", "CompanyId");
+
+                    b.ToTable("DocumentTags", (string)null);
                 });
 
             modelBuilder.Entity("KnovaHub.DomainLayer.Entities.Role", b =>
@@ -193,6 +364,45 @@ namespace KnovaHub.InfrastructureLayer.Migrations
                     b.ToTable("SupervisorDepartments", (string)null);
                 });
 
+            modelBuilder.Entity("KnovaHub.DomainLayer.Entities.Tag", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("Id", "CompanyId")
+                        .HasName("AK_Tags_Id_CompanyId");
+
+                    b.HasIndex("CompanyId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Tags_CompanyId_Name");
+
+                    b.ToTable("Tags", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Tags_Name", "LEN(LTRIM(RTRIM([Name]))) > 0");
+                        });
+                });
+
             modelBuilder.Entity("KnovaHub.DomainLayer.Entities.User", b =>
                 {
                     b.Property<int>("Id")
@@ -225,6 +435,9 @@ namespace KnovaHub.InfrastructureLayer.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("MustChangePassword")
+                        .HasColumnType("bit");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -255,6 +468,75 @@ namespace KnovaHub.InfrastructureLayer.Migrations
                         });
                 });
 
+            modelBuilder.Entity("KnovaHub.DomainLayer.Entities.UserRegistrationRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("RequestedById")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ReviewedById")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DepartmentId");
+
+                    b.HasIndex("Email")
+                        .HasDatabaseName("IX_UserRegistrationRequests_Email");
+
+                    b.HasIndex("RequestedById");
+
+                    b.HasIndex("ReviewedById");
+
+                    b.HasIndex("CompanyId", "Status")
+                        .HasDatabaseName("IX_UserRegistrationRequests_CompanyId_Status");
+
+                    b.ToTable("UserRegistrationRequests", (string)null);
+                });
+
+            modelBuilder.Entity("KnovaHub.DomainLayer.Entities.Category", b =>
+                {
+                    b.HasOne("KnovaHub.DomainLayer.Entities.Company", "Company")
+                        .WithMany("Categories")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+                });
+
             modelBuilder.Entity("KnovaHub.DomainLayer.Entities.Department", b =>
                 {
                     b.HasOne("KnovaHub.DomainLayer.Entities.Company", "Company")
@@ -264,6 +546,62 @@ namespace KnovaHub.InfrastructureLayer.Migrations
                         .IsRequired();
 
                     b.Navigation("Company");
+                });
+
+            modelBuilder.Entity("KnovaHub.DomainLayer.Entities.Document", b =>
+                {
+                    b.HasOne("KnovaHub.DomainLayer.Entities.User", "Author")
+                        .WithMany("AuthoredDocuments")
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("KnovaHub.DomainLayer.Entities.Company", "Company")
+                        .WithMany("Documents")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("KnovaHub.DomainLayer.Entities.Category", "Category")
+                        .WithMany("Documents")
+                        .HasForeignKey("CategoryId", "CompanyId")
+                        .HasPrincipalKey("Id", "CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("KnovaHub.DomainLayer.Entities.Department", "Department")
+                        .WithMany("Documents")
+                        .HasForeignKey("DepartmentId", "CompanyId")
+                        .HasPrincipalKey("Id", "CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Author");
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Company");
+
+                    b.Navigation("Department");
+                });
+
+            modelBuilder.Entity("KnovaHub.DomainLayer.Entities.DocumentTag", b =>
+                {
+                    b.HasOne("KnovaHub.DomainLayer.Entities.Document", "Document")
+                        .WithMany("DocumentTags")
+                        .HasForeignKey("DocumentId", "CompanyId")
+                        .HasPrincipalKey("Id", "CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("KnovaHub.DomainLayer.Entities.Tag", "Tag")
+                        .WithMany("DocumentTags")
+                        .HasForeignKey("TagId", "CompanyId")
+                        .HasPrincipalKey("Id", "CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Document");
+
+                    b.Navigation("Tag");
                 });
 
             modelBuilder.Entity("KnovaHub.DomainLayer.Entities.SupervisorDepartment", b =>
@@ -283,6 +621,17 @@ namespace KnovaHub.InfrastructureLayer.Migrations
                     b.Navigation("Department");
 
                     b.Navigation("Supervisor");
+                });
+
+            modelBuilder.Entity("KnovaHub.DomainLayer.Entities.Tag", b =>
+                {
+                    b.HasOne("KnovaHub.DomainLayer.Entities.Company", "Company")
+                        .WithMany("Tags")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Company");
                 });
 
             modelBuilder.Entity("KnovaHub.DomainLayer.Entities.User", b =>
@@ -310,18 +659,70 @@ namespace KnovaHub.InfrastructureLayer.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("KnovaHub.DomainLayer.Entities.UserRegistrationRequest", b =>
+                {
+                    b.HasOne("KnovaHub.DomainLayer.Entities.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("KnovaHub.DomainLayer.Entities.Department", "Department")
+                        .WithMany()
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("KnovaHub.DomainLayer.Entities.User", "RequestedBy")
+                        .WithMany()
+                        .HasForeignKey("RequestedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("KnovaHub.DomainLayer.Entities.User", "ReviewedBy")
+                        .WithMany()
+                        .HasForeignKey("ReviewedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Company");
+
+                    b.Navigation("Department");
+
+                    b.Navigation("RequestedBy");
+
+                    b.Navigation("ReviewedBy");
+                });
+
+            modelBuilder.Entity("KnovaHub.DomainLayer.Entities.Category", b =>
+                {
+                    b.Navigation("Documents");
+                });
+
             modelBuilder.Entity("KnovaHub.DomainLayer.Entities.Company", b =>
                 {
+                    b.Navigation("Categories");
+
                     b.Navigation("Departments");
+
+                    b.Navigation("Documents");
+
+                    b.Navigation("Tags");
 
                     b.Navigation("Users");
                 });
 
             modelBuilder.Entity("KnovaHub.DomainLayer.Entities.Department", b =>
                 {
+                    b.Navigation("Documents");
+
                     b.Navigation("Members");
 
                     b.Navigation("Supervisors");
+                });
+
+            modelBuilder.Entity("KnovaHub.DomainLayer.Entities.Document", b =>
+                {
+                    b.Navigation("DocumentTags");
                 });
 
             modelBuilder.Entity("KnovaHub.DomainLayer.Entities.Role", b =>
@@ -329,8 +730,15 @@ namespace KnovaHub.InfrastructureLayer.Migrations
                     b.Navigation("Users");
                 });
 
+            modelBuilder.Entity("KnovaHub.DomainLayer.Entities.Tag", b =>
+                {
+                    b.Navigation("DocumentTags");
+                });
+
             modelBuilder.Entity("KnovaHub.DomainLayer.Entities.User", b =>
                 {
+                    b.Navigation("AuthoredDocuments");
+
                     b.Navigation("SupervisedDepartments");
                 });
 #pragma warning restore 612, 618

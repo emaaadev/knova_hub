@@ -14,4 +14,7 @@ public class AuthResponseDto
     public string Rnc { get; set; } = string.Empty;
     public string Sector { get; set; } = string.Empty;
     public string Activity { get; set; } = string.Empty;
+
+    /// <summary>True si el usuario debe cambiar su contraseña en su primer inicio de sesión.</summary>
+    public bool MustChangePassword { get; set; }
 }

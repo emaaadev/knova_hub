@@ -6,6 +6,10 @@ public class User
     public string FullName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
+
+    /// <summary>True cuando el usuario entró con una contraseña temporal y debe cambiarla.</summary>
+    public bool MustChangePassword { get; set; }
+
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
@@ -22,4 +26,7 @@ public class User
 
     /// <summary>Departamentos que supervisa (solo para el rol Supervisor).</summary>
     public ICollection<SupervisorDepartment> SupervisedDepartments { get; set; } = new List<SupervisorDepartment>();
+
+    /// <summary>Documentos creados por este usuario.</summary>
+    public ICollection<Document> AuthoredDocuments { get; set; } = new List<Document>();
 }

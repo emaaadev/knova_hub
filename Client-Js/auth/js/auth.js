@@ -205,7 +205,11 @@ if (loginForm) {
             if (response.ok) {
                 localStorage.setItem("knovaToken", data.token);
                 localStorage.setItem("knovaUser", JSON.stringify(data));
-                window.location.href = "../dashboard/dashboard.html";
+
+                // Si entró con contraseña temporal, debe cambiarla antes de entrar al panel.
+                window.location.href = data.mustChangePassword
+                    ? "../dashboard/cambiar-contrasena.html"
+                    : "../dashboard/dashboard.html";
             } else {
                 showMessage(loginForm, data.message || "Credenciales incorrectas.", true);
             }

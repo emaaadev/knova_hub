@@ -228,4 +228,35 @@ public class DepartmentServiceTests
             It.Is<IReadOnlyCollection<int>>(ids => ids.Count == 0)), Times.Once);
         Assert.That(r, Is.Empty);
     }
+
+    // ---------- Ver departamentos de un Supervisor ----------
+
+    [Test]
+    public async Task GetSupervisedDepartments_Valido_DevuelveLosSuyos()
+    {
+        _users.Setup(u => u.GetByIdInCompanyAsync(Empresa, 20))
+            .ReturnsAsync(TestData.UsuarioDeEmpresa(20, SystemRoles.SupervisorRoleId));
+        _departments.Setup(d => d.GetSupervisedAsync(20))
+            .ReturnsAsync(new List<Department> { DeptosEmpresa()[0], DeptosEmpresa()[1] });
+
+        var r = await _service.GetSupervisedDepartmentsAsync(Empresa, 20);
+
+        Assert.That(r.Select(d => d.Name), Is.EqualTo(new[] { "Soporte", "Ventas" }));
+    }
+
+    [Test]
+    public void GetSupervisedDepartments_NoEsSupervisor_LanzaDataValidation()
+    {
+        _users.Setup(u => u.GetByIdInCompanyAsync(Empresa, 30))
+            .ReturnsAsync(TestData.UsuarioDeEmpresa(30, SystemRoles.UsuarioRoleId));
+
+        Assert.ThrowsAsync<DataValidationException>(() => _service.GetSupervisedDepartmentsAsync(Empresa, 30));
+        _departments.Verify(d => d.GetSupervisedAsync(It.IsAny<int>()), Times.Never);
+    }
+
+    [Test]
+    public void GetSupervisedDepartments_DeOtraEmpresa_LanzaNotFound()
+    {
+        Assert.ThrowsAsync<NotFoundException>(() => _service.GetSupervisedDepartmentsAsync(Empresa, 404));
+    }
 }

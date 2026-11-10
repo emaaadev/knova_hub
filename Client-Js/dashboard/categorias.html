@@ -1,0 +1,283 @@
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Categorías — Knova Hub</title>
+
+    <link rel="stylesheet" href="./css/dashboard.css">
+    <link rel="stylesheet" href="./css/manage.css">
+    <link rel="stylesheet" href="./css/notificaciones.css">
+
+    <script src="./js/app.js" defer></script>
+    <script src="./js/categorias.js" defer></script>
+</head>
+
+<body>
+
+    <a class="skip-link" href="#contenido">
+        Saltar al contenido
+    </a>
+
+    <div class="shell">
+
+        <!-- MENÚ LATERAL -->
+        <aside class="sidebar">
+
+            <a class="sidebar-logo"
+               href="../home/index.html">
+
+                <img src="../assets/logo.png"
+                     alt="Knova Hub">
+
+            </a>
+
+            <nav class="side-nav" aria-label="Navegación">
+
+                <a class="nav-item"
+                   data-page="dashboard"
+                   href="dashboard.html">
+                    Inicio
+                </a>
+
+                <a class="nav-item"
+                   data-page="usuarios"
+                   data-role-gestion
+                   href="usuarios.html">
+                    Usuarios
+                </a>
+
+                <a class="nav-item"
+                   data-page="solicitudes"
+                   data-role-gestion
+                   href="solicitudes.html">
+                    Solicitudes
+                </a>
+
+                <a class="nav-item"
+                   data-page="departamentos"
+                   data-role-gestion
+                   href="departamentos.html">
+                    Departamentos
+                </a>
+
+                <a class="nav-item"
+                   data-page="documentos"
+                   href="documentos.html">
+                    Documentos
+                </a>
+
+                <a class="nav-item"
+                   data-page="categorias"
+                   href="categorias.html">
+                    Categorías
+                </a>
+
+                <a class="nav-item"
+                   href="documentos.html?tipo=wiki">
+                    Wikis y minutas
+                </a>
+
+            </nav>
+
+        </aside>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <div class="main">
+
+            <header class="topbar">
+
+                <h2 class="topbar-title">
+                    Categorías
+                </h2>
+
+                <div class="user-menu">
+
+                    <div class="user-info">
+
+                        <span class="user-name"
+                              id="user-name"></span>
+
+                        <span class="role-badge"
+                              id="user-role"></span>
+
+                    </div>
+
+                    <button type="button"
+                            class="logout-btn"
+                            id="logout">
+                        Cerrar sesión
+                    </button>
+
+                </div>
+
+            </header>
+
+            <main class="dashboard-content" id="contenido">
+
+                <!-- ENCABEZADO -->
+                <div class="page-header">
+
+                    <div>
+
+                        <h1>Gestión de categorías</h1>
+
+                        <p class="page-subtitle">
+                            Organiza los documentos de tu empresa.
+                        </p>
+
+                    </div>
+
+
+                    <div class="toolbar">
+
+                        <a href="documentos.html"
+                           class="btn">
+                            ← Volver a Documentos
+                        </a>
+
+                        <button type="button"
+                                class="btn btn-primary"
+                                id="btn-nueva-categoria"
+                                hidden>
+                            + Nueva categoría
+                        </button>
+
+                        <button type="button"
+                                class="btn"
+                                id="btn-recargar">
+                            Actualizar
+                        </button>
+
+                    </div>
+
+
+                </div>
+
+                <!-- BUSCADOR -->
+                <section class="card">
+
+                    <div class="field">
+
+                        <label for="buscar-categoria">
+                            Buscar categoría
+                        </label>
+
+                        <input type="search"
+                               id="buscar-categoria"
+                               placeholder="Escribe el nombre de una categoría…">
+
+                    </div>
+
+                </section>
+
+                <!-- LISTADO -->
+                <section class="card">
+
+                    <h2>Categorías registradas</h2>
+
+                    <p class="page-subtitle"
+                       id="conteo-categorias">
+                        Cargando categorías…
+                    </p>
+
+                    <div class="table-wrap">
+
+                        <table class="table">
+
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="cuerpo-categorias">
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                    <p class="empty-state"
+                       id="vacio-categorias"
+                       hidden>
+                        No hay categorías registradas.
+                    </p>
+
+                    <p class="form-message"
+                       id="error-categorias"
+                       role="alert"
+                       hidden>
+                    </p>
+
+                </section>
+
+                <!-- FORMULARIO -->
+                <section class="card"
+                         id="seccion-formulario"
+                         hidden>
+
+                    <h2 id="titulo-formulario">
+                        Nueva categoría
+                    </h2>
+
+                    <form id="form-categoria">
+
+                        <div class="form-grid">
+
+                            <div class="field">
+
+                                <label for="categoria-nombre">
+                                    Nombre de la categoría *
+                                </label>
+
+                                <input type="text"
+                                       id="categoria-nombre"
+                                       maxlength="100"
+                                       required
+                                       placeholder="Ej. Recursos Humanos">
+
+                            </div>
+
+                        </div>
+
+                        <p class="form-message"
+                           id="mensaje-formulario"
+                           role="alert"
+                           hidden>
+                        </p>
+
+                        <div class="form-actions">
+
+                            <button type="submit"
+                                    class="btn btn-primary"
+                                    id="btn-guardar">
+                                Guardar
+                            </button>
+
+                            <button type="button"
+                                    class="btn"
+                                    id="btn-cancelar">
+                                Cancelar
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </section>
+
+            </main>
+
+        </div>
+
+    </div>
+
+</body>
+</html>

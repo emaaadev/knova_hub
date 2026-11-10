@@ -80,6 +80,7 @@ public class UserRepository : IUserRepository
     {
         return _context.Users
             .Include(u => u.Role)
+            .Include(u => u.Department)
             .FirstOrDefaultAsync(u => u.Id == userId && u.CompanyId == companyId);
     }
 
@@ -128,5 +129,79 @@ public class UserRepository : IUserRepository
         var user = await _context.Users.FirstAsync(u => u.Id == userId);
         user.DepartmentId = departmentId;
         await _context.SaveChangesAsync();
+    }
+
+    public Task<User?> GetByIdAsync(int userId)
+    {
+        return _context.Users
+            .Include(u => u.Role)
+            .Include(u => u.Company)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+    }
+
+    public Task<List<User>> GetByCompanyAsync(int companyId)
+    {
+        return _context.Users
+            .AsNoTracking()
+            .Include(u => u.Role)
+            .Include(u => u.Department)
+            .Where(u => u.CompanyId == companyId)
+            .OrderBy(u => u.FullName)
+            .ToListAsync();
+    }
+
+    public Task<List<User>> GetByDepartmentIdsAsync(IReadOnlyCollection<int> departmentIds)
+    {
+        return _context.Users
+            .AsNoTracking()
+            .Include(u => u.Role)
+            .Include(u => u.Department)
+            .Where(u => u.DepartmentId != null && departmentIds.Contains(u.DepartmentId.Value))
+            .OrderBy(u => u.FullName)
+            .ToListAsync();
+    }
+
+    public async Task<User> AddAsync(User user)
+    {
+        _context.Users.Add(user);
+        await SaveAsync();
+        await _context.Entry(user).Reference(u => u.Role).LoadAsync();
+        return user;
+    }
+
+    public Task UpdateAsync(User user)
+    {
+        _context.Users.Update(user);
+        return SaveAsync();
+    }
+
+    public async Task UpdatePasswordAsync(int userId, string newPasswordHash)
+    {
+        var user = await _context.Users.FirstAsync(u => u.Id == userId);
+        user.PasswordHash = newPasswordHash;
+        user.MustChangePassword = false;
+        await _context.SaveChangesAsync();
+    }
+
+    public Task<bool> EmailExistsAsync(string email)
+    {
+        return _context.Users.AnyAsync(u => u.Email == email);
+    }
+
+    private async Task SaveAsync()
+    {
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is SqlException { Number: 2601 or 2627 })
+        {
+            throw new DuplicateEntityException("email", "Ese correo ya está registrado.");
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is SqlException { Number: 547 or 2628 or 8152 })
+        {
+            throw new DataValidationException(
+                "Los datos no cumplen las reglas de la base de datos. Revisa el nombre y el correo.");
+        }
     }
 }
