@@ -18,6 +18,7 @@ public class KnovaExceptionFilter : IExceptionFilter
             DuplicateEntityException ex => new ConflictObjectResult(new { field = ex.Field, message = ex.Message }),
             DataValidationException { Field: not null } ex => new BadRequestObjectResult(new { field = ex.Field, message = ex.Message }),
             DataValidationException ex => new BadRequestObjectResult(new { message = ex.Message }),
+            UnauthorizedAccessException ex => new ObjectResult(new { message = ex.Message }) { StatusCode = 403 },
             _ => null
         };
 

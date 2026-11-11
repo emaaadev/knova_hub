@@ -1,7 +1,9 @@
 
 using KnovaHub.DomainLayer.Entities;
+using KnovaHub.DomainLayer.Exceptions;
 using KnovaHub.DomainLayer.Repository;
 using KnovaHub.InfrastructureLayer.Data;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace KnovaHub.InfrastructureLayer.Repositories;
@@ -56,7 +58,7 @@ public class TagRepository : ITagRepository
     public async Task<Tag> AddAsync(Tag tag)
     {
         _context.Tags.Add(tag);
-        await _context.SaveChangesAsync();
+        await SaveAsync();
 
         return tag;
     }
@@ -64,6 +66,18 @@ public class TagRepository : ITagRepository
     public Task UpdateAsync(Tag tag)
     {
         _context.Tags.Update(tag);
-        return _context.SaveChangesAsync();
+        return SaveAsync();
+    }
+
+    private async Task SaveAsync()
+    {
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is SqlException { Number: 2601 or 2627 })
+        {
+            throw new DuplicateEntityException("name", "Ya existe una etiqueta con ese nombre en la empresa.");
+        }
     }
 }

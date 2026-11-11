@@ -21,6 +21,12 @@ function logout() {
 
 // Roles que pueden ver los módulos de gestión (Usuarios, Solicitudes y Departamentos).
 const ROLES_GESTION = ["AdminEmpresa", "Supervisor"];
+const ROLE_LABELS = {
+    AdminEmpresa: "Administrador de empresa",
+    AdminPlataforma: "Administrador de plataforma",
+    Supervisor: "Supervisor",
+    Usuario: "Usuario"
+};
 
 // Páginas del panel restringidas a esos roles.
 const PAGINAS_GESTION = ["usuarios", "solicitudes", "departamentos"];
@@ -50,71 +56,120 @@ function currentPage() {
 }
 
 async function api(path, options = {}) {
+    const { body, asBlob, ...request } = options;
     const token = getToken();
-    const headers = { ...(options.headers || {}) };
+    const headers = { ...request.headers };
+    let payload = body;
 
-    if (options.body !== undefined && typeof options.body !== "string") {
+    if (body !== undefined && typeof body !== "string" && !(body instanceof FormData)) {
         headers["Content-Type"] = "application/json";
-        options.body = JSON.stringify(options.body);
+        payload = JSON.stringify(body);
     }
+    if (token) headers["Authorization"] = `Bearer ${token}`;
 
-    if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-    }
-
-    const response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
-
-    let data = null;
+    let response;
     try {
-        data = await response.json();
-    } catch {
-        /* sin cuerpo */
+        response = await fetch(`${API_BASE_URL}${path}`, { ...request, headers, body: payload });
+    } catch (error) {
+        if (error.name === "AbortError") throw error;
+        throw new Error("No se pudo conectar con la API. Intenta de nuevo.");
     }
+
+    if (response.ok && asBlob) return response.blob();
+
+    if (response.status >= 500) {
+        const error = new Error("La API no pudo completar la operación. Intenta de nuevo.");
+        error.status = response.status;
+        throw error;
+    }
+
+    const contentType = response.headers.get("Content-Type") || "";
+    const data = contentType.includes("json")
+        ? await response.json().catch(() => null)
+        : contentType.startsWith("text/plain") ? await response.text() : null;
 
     if (!response.ok) {
-        const error = new Error((data && data.message) || "No se pudo completar la operación.");
+        const validation = Object.values(data?.errors || {}).flat().join(" ");
+        const fallback = {
+            401: "La sesión venció. Inicia sesión de nuevo.",
+            403: "No tienes permiso para realizar esta operación.",
+            404: "El recurso no está disponible.",
+            413: "El archivo supera el límite permitido."
+        };
+        const message = typeof data === "string" ? data : data?.message || validation;
+        const error = new Error(message || fallback[response.status] || "No se pudo completar la operación.");
         error.status = response.status;
-        error.field = data && data.field;
+        error.field = data?.field;
         throw error;
     }
 
     return data;
 }
 
-// Rellena el topbar (nombre y rol), oculta el nav según el rol y conecta el logout.
 function setupShell() {
     const session = requireSession();
     if (!session) return null;
 
     const { user } = session;
+    const page = currentPage();
+    const canManage = ROLES_GESTION.includes(user.role);
 
-    // Un Usuario no tiene módulos de gestión: lo mandamos al inicio.
-    if (PAGINAS_GESTION.includes(currentPage()) && !ROLES_GESTION.includes(user.role)) {
+    if (PAGINAS_GESTION.includes(page) && !canManage) {
         window.location.href = "dashboard.html";
         return null;
     }
 
-    const nameEl = document.getElementById("user-name");
-    const roleEl = document.getElementById("user-role");
-    if (nameEl) nameEl.textContent = user.fullName || "";
-    if (roleEl) roleEl.textContent = user.role || "";
-
-    const logoutBtn = document.getElementById("logout");
-    if (logoutBtn) logoutBtn.addEventListener("click", logout);
-
-    // Marca el ítem activo del nav.
-    document.querySelectorAll(".nav-item[data-page]").forEach((link) => {
-        link.classList.toggle("is-active", link.dataset.page === currentPage());
-    });
-
-    // Muestra solo los módulos de gestión a AdminEmpresa y Supervisor.
-    document.querySelectorAll("[data-role-gestion]").forEach((el) => {
-        el.hidden = !ROLES_GESTION.includes(user.role);
-    });
-
+    renderAccount(user);
+    setupNavigation(page, user.role, canManage);
     prepararMenuMovil();
 
     return session;
+}
+
+function renderAccount(user) {
+    const name = document.getElementById("user-name");
+    const role = document.getElementById("user-role");
+    if (name) name.textContent = user.fullName || "";
+    if (role) {
+        role.textContent = ROLE_LABELS[user.role] || user.role || "";
+        role.hidden = !role.textContent;
+    }
+    document.getElementById("logout")?.addEventListener("click", logout);
+}
+
+function setupNavigation(page, role, canManage) {
+    const wikiLink = document.querySelector('.nav-item[href="documentos.html?tipo=wiki"]');
+    if (wikiLink) {
+        wikiLink.dataset.page = "wikis";
+        if (role === "AdminEmpresa") addCatalogLinks(wikiLink);
+    }
+
+    const isWiki = page === "documentos" &&
+        new URLSearchParams(location.search).get("tipo") === "wiki";
+    const activePage = isWiki ? "wikis" : page;
+
+    document.querySelectorAll(".nav-item[data-page]").forEach(link => {
+        const active = link.dataset.page === activePage;
+        link.classList.toggle("is-active", active);
+        if (active) link.setAttribute("aria-current", "page");
+        else link.removeAttribute("aria-current");
+    });
+
+    document.querySelectorAll("[data-role-gestion]").forEach(element => {
+        element.hidden = !canManage;
+    });
+}
+
+function addCatalogLinks(wikiLink) {
+    const nextLink = wikiLink.nextElementSibling;
+    for (const [page, title] of [["categorias", "Categorías"], ["etiquetas", "Etiquetas"]]) {
+        const link = document.createElement("a");
+        link.className = "nav-item";
+        link.dataset.page = page;
+        link.href = `${page}.html`;
+        link.textContent = title;
+        wikiLink.parentElement.insertBefore(link, nextLink);
+    }
 }
 
 // Menú hamburguesa: en pantallas pequeñas el sidebar se vuelve un panel deslizante.

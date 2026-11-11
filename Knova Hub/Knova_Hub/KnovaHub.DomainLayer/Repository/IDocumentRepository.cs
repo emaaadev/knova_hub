@@ -11,7 +11,10 @@ public interface IDocumentRepository
         int? categoryId = null,
         int? tagId = null,
         int? departmentId = null,
-        string? search = null);
+        string? search = null,
+        int[]? visibleDepartmentIds = null);
+
+    Task<DocumentSummary> GetSummaryAsync(int companyId, int[]? visibleDepartmentIds);
 
     Task<Document?> GetByIdAsync(
         int companyId,
@@ -27,3 +30,16 @@ public interface IDocumentRepository
 
     Task DeleteAsync(Document document);
 }
+
+public record DocumentSummary(
+    int Documents,
+    int Wikis,
+    int Minutes,
+    IReadOnlyList<RecentDocument> RecentActivity);
+
+public record RecentDocument(
+    int Id,
+    string Title,
+    DocumentType Type,
+    DateTime CreatedAt,
+    DateTime? UpdatedAt);

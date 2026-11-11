@@ -231,6 +231,7 @@ namespace KnovaHub.InfrastructureLayer.Migrations
                         .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("StorageKey")
+                        .IsConcurrencyToken()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 

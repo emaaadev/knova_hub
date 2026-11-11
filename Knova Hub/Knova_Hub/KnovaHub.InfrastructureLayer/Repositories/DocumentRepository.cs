@@ -1,5 +1,6 @@
 
 using KnovaHub.DomainLayer.Entities;
+using KnovaHub.DomainLayer.Exceptions;
 using KnovaHub.DomainLayer.Repository;
 using KnovaHub.InfrastructureLayer.Data;
 using Microsoft.EntityFrameworkCore;
@@ -22,16 +23,16 @@ public class DocumentRepository : IDocumentRepository
         int? categoryId = null,
         int? tagId = null,
         int? departmentId = null,
-        string? search = null)
+        string? search = null,
+        int[]? visibleDepartmentIds = null)
     {
-        var query = _context.Documents
+        IQueryable<Document> query = VisibleDocuments(companyId, visibleDepartmentIds)
             .AsNoTracking()
             .Include(d => d.Author)
             .Include(d => d.Category)
             .Include(d => d.Department)
             .Include(d => d.DocumentTags)
-                .ThenInclude(dt => dt.Tag)
-            .Where(d => d.CompanyId == companyId);
+                .ThenInclude(dt => dt.Tag);
 
         if (type.HasValue)
         {
@@ -73,6 +74,38 @@ public class DocumentRepository : IDocumentRepository
             .OrderByDescending(d => d.CreatedAt)
             .AsSplitQuery()
             .ToListAsync();
+    }
+
+    public async Task<DocumentSummary> GetSummaryAsync(int companyId, int[]? visibleDepartmentIds)
+    {
+        var query = VisibleDocuments(companyId, visibleDepartmentIds);
+        var counts = await query.GroupBy(d => d.Type)
+            .Select(group => new { Type = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(row => row.Type, row => row.Count);
+        var activity = await query
+            .OrderByDescending(d => d.UpdatedAt ?? d.CreatedAt)
+            .ThenByDescending(d => d.Id)
+            .Take(8)
+            .Select(d => new RecentDocument(d.Id, d.Title, d.Type, d.CreatedAt, d.UpdatedAt))
+            .ToListAsync();
+
+        return new DocumentSummary(
+            counts.GetValueOrDefault(DocumentType.Documento),
+            counts.GetValueOrDefault(DocumentType.Wiki),
+            counts.GetValueOrDefault(DocumentType.Minuta),
+            activity);
+    }
+
+    private IQueryable<Document> VisibleDocuments(int companyId, int[]? departmentIds)
+    {
+        var company = _context.Documents.Where(d => d.CompanyId == companyId);
+        return departmentIds switch
+        {
+            null => company,
+            { Length: 0 } => company.Where(d => d.Visibility == DocumentVisibility.General),
+            _ => company.Where(d => d.Visibility == DocumentVisibility.General ||
+                (d.DepartmentId.HasValue && departmentIds.Contains(d.DepartmentId.Value)))
+        };
     }
 
     // Obtener documento por ID y empresa
@@ -129,19 +162,28 @@ public class DocumentRepository : IDocumentRepository
         return document;
     }
 
-    // Actualizar documento
-    public async Task UpdateAsync(Document document)
+    public Task UpdateAsync(Document document)
     {
-        // El documento se obtuvo con seguimiento
-        // de cambios desde GetByIdAsync.
-        await _context.SaveChangesAsync();
+        // GetByIdAsync devuelve una entidad con seguimiento y su StorageKey original.
+        return SaveChangesAsync();
     }
 
-    // Eliminar documento
-    public async Task DeleteAsync(Document document)
+    public Task DeleteAsync(Document document)
     {
         _context.Documents.Remove(document);
+        return SaveChangesAsync();
+    }
 
-        await _context.SaveChangesAsync();
+    private async Task SaveChangesAsync()
+    {
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new BusinessRuleException(
+                "Otro usuario modificó el archivo o eliminó el recurso. Vuelve a abrirlo e inténtalo de nuevo.");
+        }
     }
 }

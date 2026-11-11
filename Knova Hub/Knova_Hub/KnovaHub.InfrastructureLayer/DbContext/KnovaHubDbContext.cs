@@ -212,7 +212,8 @@ public class KnovaHubDbContext : DbContext
             e.Property(d => d.Visibility).HasConversion<int>().IsRequired();
             e.Property(d => d.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
             e.Property(d => d.OriginalFileName).HasMaxLength(255);
-            e.Property(d => d.StorageKey).HasMaxLength(100);
+            // Detecta reemplazos simultáneos de adjuntos sin agregar una columna.
+            e.Property(d => d.StorageKey).HasMaxLength(100).IsConcurrencyToken();
             e.Property(d => d.ContentType).HasMaxLength(150);
             e.Property(d => d.FileExtension).HasMaxLength(10);
 
