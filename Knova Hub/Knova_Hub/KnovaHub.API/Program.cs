@@ -1,4 +1,3 @@
-using System.Text;
 using KnovaHub.API.Authorization;
 using KnovaHub.API.Filters;
 using KnovaHub.ApplicationLayer.Contract;
@@ -11,6 +10,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Runtime;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -67,6 +68,17 @@ builder.Services.AddSingleton<IFileStorage>(_ =>
     }
 
     return new LocalFileStorage(storagePath);
+});
+
+// IA (Claude). La clave va en User Secrets o en la variable de entorno Anthropic__ApiKey.
+var aiSettings = builder.Configuration.GetSection("Anthropic").Get<AiSettings>() ?? new AiSettings();
+builder.Services.AddSingleton(aiSettings);
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<IAiUsageLimiter, InMemoryAiUsageLimiter>();
+builder.Services.AddHttpClient<IAiService, ClaudeAiService>(client =>
+{
+    client.BaseAddress = new Uri(aiSettings.BaseUrl);
+    client.Timeout = Timeout.InfiniteTimeSpan; // el tiempo máximo lo controla ClaudeAiService
 });
 
 builder.Services

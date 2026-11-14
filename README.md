@@ -50,3 +50,21 @@ La clave para firmar los tokens **no está en el repositorio**. Cada desarrollad
 3. Ejecuta la API en modo desarrollo. Si la clave falta, la API no inicia y muestra un mensaje indicándolo.
 
 En producción, la clave se pasa con la variable de entorno `Jwt__Key`.
+
+## Configuración local: clave de la IA (Claude)
+
+La IA usa la API de Claude. La clave **no está en el repositorio**: pídesela a Johan por mensaje directo (es personal, no la compartas) y guárdala en User Secrets.
+
+1. Clic derecho en `KnovaHub.API` > *Administrar secretos de usuario* y agrega, sin borrar lo que ya hay:
+
+   ```json
+   "Anthropic": { "ApiKey": "tu-clave" }
+   ```
+
+   O desde la terminal, en la carpeta `KnovaHub.API`:
+
+   
+2. El modelo, el tiempo de espera, los tamaños máximos y los límites diarios de consultas están en `appsettings.json`, sección `Anthropic`. Un límite en 0 significa sin límite.
+3. Sin clave la API arranca igual, pero las consultas a la IA responden 503. Las pruebas automáticas no la necesitan: usan un cliente simulado.
+
+En producción, la clave se pasa con la variable de entorno `Anthropic__ApiKey`.

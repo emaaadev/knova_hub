@@ -19,6 +19,8 @@ public class KnovaExceptionFilter : IExceptionFilter
             DataValidationException { Field: not null } ex => new BadRequestObjectResult(new { field = ex.Field, message = ex.Message }),
             DataValidationException ex => new BadRequestObjectResult(new { message = ex.Message }),
             UnauthorizedAccessException ex => new ObjectResult(new { message = ex.Message }) { StatusCode = 403 },
+            AiRateLimitException ex => new ObjectResult(new { message = ex.Message }) { StatusCode = 429 },
+            AiServiceException ex => new ObjectResult(new { message = ex.Message }) { StatusCode = ex.StatusCode },
             _ => null
         };
 
