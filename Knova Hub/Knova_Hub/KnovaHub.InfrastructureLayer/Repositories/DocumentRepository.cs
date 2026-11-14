@@ -168,6 +168,46 @@ public class DocumentRepository : IDocumentRepository
         return SaveChangesAsync();
     }
 
+    public async Task UpdateWithTextAsync(Document document, DocumentText? text)
+    {
+        // El texto no se carga con el documento; se busca aquí para reemplazarlo o borrarlo.
+        var existing = await _context.DocumentTexts
+            .FirstOrDefaultAsync(t => t.DocumentId == document.Id && t.CompanyId == document.CompanyId);
+
+        if (text == null)
+        {
+            if (existing != null)
+                _context.DocumentTexts.Remove(existing);
+        }
+        else if (existing != null)
+        {
+            existing.Markdown = text.Markdown;
+            existing.CharacterCount = text.CharacterCount;
+            existing.ProcessedAt = text.ProcessedAt;
+        }
+        else
+        {
+            text.DocumentId = document.Id;
+            text.CompanyId = document.CompanyId;
+            _context.DocumentTexts.Add(text);
+        }
+
+        // Un solo SaveChanges: el archivo nuevo y su texto se guardan juntos o no se guarda nada.
+        await SaveChangesAsync();
+    }
+
+    public async Task<List<IndexedDocumentText>> GetIndexedTextsAsync(
+        int companyId,
+        int[]? visibleDepartmentIds)
+    {
+        return await VisibleDocuments(companyId, visibleDepartmentIds)
+            .AsNoTracking()
+            .Where(d => d.TextStatus == DocumentTextStatus.Indexado && d.Text != null)
+            .OrderByDescending(d => d.UpdatedAt ?? d.CreatedAt)
+            .Select(d => new IndexedDocumentText(d.Id, d.Title, d.Text!.Markdown))
+            .ToListAsync();
+    }
+
     public Task DeleteAsync(Document document)
     {
         _context.Documents.Remove(document);

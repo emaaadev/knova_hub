@@ -19,6 +19,7 @@ public class KnovaHubDbContext : DbContext
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<DocumentTag> DocumentTags => Set<DocumentTag>();
+    public DbSet<DocumentText> DocumentTexts => Set<DocumentText>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -202,6 +203,10 @@ public class KnovaHubDbContext : DbContext
                     "([Visibility] = 1 AND [DepartmentId] IS NULL) OR ([Visibility] = 2 AND [DepartmentId] IS NOT NULL)");
                 t.HasCheckConstraint("CK_Documents_FileMetadata",
                     "(([StorageKey] IS NULL AND [OriginalFileName] IS NULL AND [ContentType] IS NULL AND [FileExtension] IS NULL AND [FileSizeBytes] IS NULL) OR ([StorageKey] IS NOT NULL AND [OriginalFileName] IS NOT NULL AND [ContentType] IS NOT NULL AND [FileExtension] IS NOT NULL AND [FileSizeBytes] > 0))");
+                // Todo archivo tiene un estado de texto; sin archivo no hay estado.
+                // El IS NOT NULL es necesario: con NULL, "IN (1, 2, 3)" da UNKNOWN y SQL Server aceptaría la fila.
+                t.HasCheckConstraint("CK_Documents_TextStatus",
+                    "([StorageKey] IS NULL AND [TextStatus] IS NULL) OR ([StorageKey] IS NOT NULL AND [TextStatus] IS NOT NULL AND [TextStatus] IN (1, 2, 3))");
             });
 
             e.HasKey(d => d.Id);
@@ -216,6 +221,8 @@ public class KnovaHubDbContext : DbContext
             e.Property(d => d.StorageKey).HasMaxLength(100).IsConcurrencyToken();
             e.Property(d => d.ContentType).HasMaxLength(150);
             e.Property(d => d.FileExtension).HasMaxLength(10);
+            e.Property(d => d.TextStatus).HasConversion<int?>();
+            e.Property(d => d.TextStatusReason).HasMaxLength(300);
 
             e.HasIndex(d => new { d.CompanyId, d.CreatedAt })
                 .HasDatabaseName("IX_Documents_CompanyId_CreatedAt");
@@ -277,6 +284,27 @@ public class KnovaHubDbContext : DbContext
                 .HasForeignKey(dt => new { dt.TagId, dt.CompanyId })
                 .HasPrincipalKey(t => new { t.Id, t.CompanyId })
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<DocumentText>(e =>
+        {
+            e.ToTable("DocumentTexts", t =>
+            {
+                t.HasCheckConstraint("CK_DocumentTexts_Markdown", "LEN([Markdown]) > 0");
+                t.HasCheckConstraint("CK_DocumentTexts_CharacterCount", "[CharacterCount] > 0");
+            });
+
+            e.HasKey(dt => dt.DocumentId);
+            e.Property(dt => dt.DocumentId).ValueGeneratedNever();
+            e.Property(dt => dt.Markdown).IsRequired();
+            e.Property(dt => dt.ProcessedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            // El texto pertenece a un documento de la misma empresa y se borra con él.
+            e.HasOne(dt => dt.Document)
+                .WithOne(d => d.Text)
+                .HasForeignKey<DocumentText>(dt => new { dt.DocumentId, dt.CompanyId })
+                .HasPrincipalKey<Document>(d => new { d.Id, d.CompanyId })
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<UserRegistrationRequest>(e =>

@@ -37,6 +37,10 @@ public class DocumentDto
     public long? FileSizeBytes { get; set; }
 
     public bool HasFile => !string.IsNullOrWhiteSpace(OriginalFileName);
+
+    // Indica si la IA puede leer el archivo. Con NoIndexable, TextStatusReason explica el motivo.
+    public DocumentTextStatus? TextStatus { get; set; }
+    public string? TextStatusReason { get; set; }
 }
 
 /// <summary>Datos para crear un documento.</summary>

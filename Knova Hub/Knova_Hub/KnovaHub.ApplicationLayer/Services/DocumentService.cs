@@ -17,6 +17,7 @@ public class DocumentService : IDocumentService
     private readonly IDepartmentRepository _departments;
     private readonly IUserRepository _users;
     private readonly IFileStorage _fileStorage;
+    private readonly IDocumentTextExtractor _textExtractor;
 
     // Tamaño máximo permitido por archivo: 20 MB
     private const long MaxFileSizeBytes = 20L * 1024 * 1024;
@@ -27,7 +28,8 @@ public class DocumentService : IDocumentService
     ITagRepository tags,
     IDepartmentRepository departments,
     IUserRepository users,
-    IFileStorage fileStorage)
+    IFileStorage fileStorage,
+    IDocumentTextExtractor textExtractor)
     {
         _documents = documents;
         _categories = categories;
@@ -35,6 +37,7 @@ public class DocumentService : IDocumentService
         _departments = departments;
         _users = users;
         _fileStorage = fileStorage;
+        _textExtractor = textExtractor;
     }
 
     public async Task<List<DocumentDto>> GetAllAsync(
@@ -316,6 +319,10 @@ public class DocumentService : IDocumentService
             }
         }
 
+        // Se convierte antes de guardar: un archivo sin texto se adjunta igual, pero queda NoIndexable.
+        buffer.Position = 0;
+        var extracted = await _textExtractor.ExtractAsync(buffer, extension, cancellationToken);
+
         buffer.Position = 0;
         string newStorageKey = await _fileStorage.SaveAsync(buffer, extension, cancellationToken);
         string? oldStorageKey = document.StorageKey;
@@ -328,7 +335,29 @@ public class DocumentService : IDocumentService
             document.FileExtension = extension;
             document.FileSizeBytes = totalBytes;
             document.UpdatedAt = DateTime.UtcNow;
-            await _documents.UpdateAsync(document);
+
+            DocumentText? text = null;
+            if (extracted.IsIndexable)
+            {
+                document.TextStatus = DocumentTextStatus.Indexado;
+                document.TextStatusReason = null;
+                text = new DocumentText
+                {
+                    DocumentId = document.Id,
+                    CompanyId = companyId,
+                    Markdown = extracted.Markdown,
+                    CharacterCount = extracted.Markdown.Length,
+                    ProcessedAt = DateTime.UtcNow
+                };
+            }
+            else
+            {
+                document.TextStatus = DocumentTextStatus.NoIndexable;
+                document.TextStatusReason = extracted.Reason;
+            }
+
+            // Reemplaza el texto del archivo anterior en la misma transacción.
+            await _documents.UpdateWithTextAsync(document, text);
         }
         catch
         {
@@ -394,8 +423,10 @@ public class DocumentService : IDocumentService
         document.ContentType = null;
         document.FileExtension = null;
         document.FileSizeBytes = null;
+        document.TextStatus = null;
+        document.TextStatusReason = null;
         document.UpdatedAt = DateTime.UtcNow;
-        await _documents.UpdateAsync(document);
+        await _documents.UpdateWithTextAsync(document, null);
 
         try { await _fileStorage.DeleteAsync(oldStorageKey, CancellationToken.None); }
         catch (IOException) { /* Requiere limpieza posterior. */ }
@@ -642,6 +673,8 @@ public class DocumentService : IDocumentService
             ContentType = document.ContentType,
             FileExtension = document.FileExtension,
             FileSizeBytes = document.FileSizeBytes,
+            TextStatus = document.TextStatus,
+            TextStatusReason = document.TextStatusReason,
             Tags = document.DocumentTags
                 .Where(dt => dt.Tag != null)
                 .Select(dt => new TagDto

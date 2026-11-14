@@ -235,6 +235,13 @@ namespace KnovaHub.InfrastructureLayer.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int?>("TextStatus")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TextStatusReason")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -276,6 +283,8 @@ namespace KnovaHub.InfrastructureLayer.Migrations
                         {
                             t.HasCheckConstraint("CK_Documents_FileMetadata", "(([StorageKey] IS NULL AND [OriginalFileName] IS NULL AND [ContentType] IS NULL AND [FileExtension] IS NULL AND [FileSizeBytes] IS NULL) OR ([StorageKey] IS NOT NULL AND [OriginalFileName] IS NOT NULL AND [ContentType] IS NOT NULL AND [FileExtension] IS NOT NULL AND [FileSizeBytes] > 0))");
 
+                            t.HasCheckConstraint("CK_Documents_TextStatus", "([StorageKey] IS NULL AND [TextStatus] IS NULL) OR ([StorageKey] IS NOT NULL AND [TextStatus] IS NOT NULL AND [TextStatus] IN (1, 2, 3))");
+
                             t.HasCheckConstraint("CK_Documents_Title", "LEN(LTRIM(RTRIM([Title]))) > 0");
 
                             t.HasCheckConstraint("CK_Documents_Type", "[Type] IN (1, 2, 3)");
@@ -307,6 +316,39 @@ namespace KnovaHub.InfrastructureLayer.Migrations
                     b.HasIndex("TagId", "CompanyId");
 
                     b.ToTable("DocumentTags", (string)null);
+                });
+
+            modelBuilder.Entity("KnovaHub.DomainLayer.Entities.DocumentText", b =>
+                {
+                    b.Property<int>("DocumentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CharacterCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Markdown")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ProcessedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.HasKey("DocumentId");
+
+                    b.HasIndex("DocumentId", "CompanyId")
+                        .IsUnique();
+
+                    b.ToTable("DocumentTexts", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_DocumentTexts_CharacterCount", "[CharacterCount] > 0");
+
+                            t.HasCheckConstraint("CK_DocumentTexts_Markdown", "LEN([Markdown]) > 0");
+                        });
                 });
 
             modelBuilder.Entity("KnovaHub.DomainLayer.Entities.Role", b =>
@@ -605,6 +647,18 @@ namespace KnovaHub.InfrastructureLayer.Migrations
                     b.Navigation("Tag");
                 });
 
+            modelBuilder.Entity("KnovaHub.DomainLayer.Entities.DocumentText", b =>
+                {
+                    b.HasOne("KnovaHub.DomainLayer.Entities.Document", "Document")
+                        .WithOne("Text")
+                        .HasForeignKey("KnovaHub.DomainLayer.Entities.DocumentText", "DocumentId", "CompanyId")
+                        .HasPrincipalKey("KnovaHub.DomainLayer.Entities.Document", "Id", "CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Document");
+                });
+
             modelBuilder.Entity("KnovaHub.DomainLayer.Entities.SupervisorDepartment", b =>
                 {
                     b.HasOne("KnovaHub.DomainLayer.Entities.Department", "Department")
@@ -724,6 +778,8 @@ namespace KnovaHub.InfrastructureLayer.Migrations
             modelBuilder.Entity("KnovaHub.DomainLayer.Entities.Document", b =>
                 {
                     b.Navigation("DocumentTags");
+
+                    b.Navigation("Text");
                 });
 
             modelBuilder.Entity("KnovaHub.DomainLayer.Entities.Role", b =>

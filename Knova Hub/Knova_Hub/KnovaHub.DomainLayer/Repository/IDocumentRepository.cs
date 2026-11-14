@@ -28,8 +28,29 @@ public interface IDocumentRepository
 
     Task UpdateAsync(Document document);
 
+    /// <summary>
+    /// Guarda los cambios del documento y reemplaza su texto en una sola transacción.
+    /// Con text = null se elimina el texto guardado (archivo quitado o no indexable).
+    /// </summary>
+    Task UpdateWithTextAsync(Document document, DocumentText? text);
+
+    /// <summary>
+    /// Devuelve el Markdown de los documentos indexados que el usuario puede ver.
+    /// visibleDepartmentIds sigue la misma regla que GetByCompanyAsync (null = todos).
+    /// Es la fuente que debe usar la IA en lugar del archivo original.
+    /// </summary>
+    Task<List<IndexedDocumentText>> GetIndexedTextsAsync(
+        int companyId,
+        int[]? visibleDepartmentIds);
+
+    // El texto guardado se borra en cascada desde la base de datos.
     Task DeleteAsync(Document document);
 }
+
+public record IndexedDocumentText(
+    int DocumentId,
+    string Title,
+    string Markdown);
 
 public record DocumentSummary(
     int Documents,

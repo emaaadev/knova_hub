@@ -141,6 +141,13 @@ async function loadList({ reloadOptions = false } = {}) {
     }
 }
 
+// textStatus: 1 = Pendiente, 2 = Indexado, 3 = NoIndexable (la IA no puede leer el archivo).
+function textStatusNote(item) {
+    if (item.textStatus === 3) return `. La IA no podrá leer este archivo: ${item.textStatusReason}`;
+    if (item.textStatus === 1) return ". Vuelve a subir el archivo para que la IA pueda leerlo.";
+    return "";
+}
+
 function showDetail(item) {
     selected = item;
     $("detail-title").textContent = item.title;
@@ -151,7 +158,9 @@ function showDetail(item) {
     ].filter(Boolean).join(" · ");
     $("detail-description").textContent = item.description || "";
     $("detail-content").textContent = item.content || "";
-    $("detail-file").textContent = item.hasFile ? `Archivo adjunto: ${item.originalFileName}` : "";
+    $("detail-file").textContent = item.hasFile
+        ? `Archivo adjunto: ${item.originalFileName}${textStatusNote(item)}`
+        : "";
     $("download").hidden = !item.hasFile;
     $("remove-file").hidden = !item.hasFile || !canModify(item);
     $("edit").hidden = !canModify(item);
