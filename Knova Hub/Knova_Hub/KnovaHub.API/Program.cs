@@ -70,6 +70,9 @@ builder.Services.AddSingleton<IFileStorage>(_ =>
     return new LocalFileStorage(storagePath);
 });
 
+// Conversión de los adjuntos (PDF, DOCX, TXT, MD) a Markdown para la IA.
+builder.Services.AddSingleton<IDocumentTextExtractor, DocumentTextExtractor>();
+
 // IA (Claude). La clave va en User Secrets o en la variable de entorno Anthropic__ApiKey.
 var aiSettings = builder.Configuration.GetSection("Anthropic").Get<AiSettings>() ?? new AiSettings();
 builder.Services.AddSingleton(aiSettings);

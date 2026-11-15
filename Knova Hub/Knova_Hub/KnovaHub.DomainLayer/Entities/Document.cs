@@ -39,6 +39,12 @@ public class Document
     public string? FileExtension { get; set; }
     public long? FileSizeBytes { get; set; }
 
+    // Estado del texto extraído del adjunto para la IA. Null cuando no hay archivo.
+    // TextStatusReason explica al usuario por qué un archivo es NoIndexable.
+    public DocumentTextStatus? TextStatus { get; set; }
+    public string? TextStatusReason { get; set; }
+    public DocumentText? Text { get; set; }
+
     public ICollection<DocumentTag> DocumentTags { get; set; }
         = new List<DocumentTag>();
 }
