@@ -21,7 +21,20 @@ El costo externo estimado es **USD 0 por solicitud**, sin tokens ni almacenamien
 
 ## Verificación
 
-Aplicar las migraciones de la API y ejecutar `dotnet test` desde la carpeta de la solución. Las pruebas de `DocumentDiscoveryEndpointTests` usan solicitudes HTTP, JWT y el servicio de documentos real, con catálogos e historiales de prueba. Estas rutas funcionan sin clave de Anthropic. El endpoint de consultas de IA existente sigue usando su configuración de User Secrets para las pruebas manuales.
+### Resultados en Swagger con SQL Server
+
+| Caso | Resultado observado |
+| --- | --- |
+| Documentos relacionados | `GET /api/documents/1/related` devolvió solo la guía de código con ID 2. El documento base y el inventario de mobiliario quedaron fuera. |
+| Usuario sin historial | Tras abrir tres veces el documento 2 con otra cuenta, el usuario nuevo recibió los documentos en orden 2, 1 y 3. |
+| Aislamiento entre empresas | Con el token de la empresa B, `GET /api/documents/recommendations` devolvió `[]` y la consulta de relacionados del documento 1 de la empresa A devolvió «El documento no existe o no tienes acceso». La API traduce esa excepción a HTTP 404. |
+| Consulta real a Anthropic | `POST /api/ai/ask` respondió `MANGO-742` a partir de un adjunto TXT indexado e incluyó el documento 1 en `sources`. |
+
+Las pruebas automatizadas también cubren el ID inexistente, el documento no visible dentro de la misma empresa y la personalización por preguntas y aperturas recientes. La consulta manual a Anthropic verifica el endpoint de IA existente. Los dos endpoints nuevos calculan sugerencias localmente y su costo externo sigue siendo USD 0 por solicitud.
+
+### Cómo reproducir
+
+Aplicar las migraciones de la API y ejecutar `dotnet test` desde la carpeta de la solución. Las pruebas de `DocumentDiscoveryEndpointTests` usan solicitudes HTTP, JWT y el servicio de documentos real, con catálogos e historiales de prueba. Estas rutas funcionan sin clave de Anthropic. Para probar manualmente el endpoint de IA, solicita una clave personal a Johan por mensaje directo y guarda solo `Anthropic:ApiKey` en User Secrets de `KnovaHub.API`. Conserva `Jwt` y `ConnectionStrings` si ya existen. Ejecuta la API con el perfil `http`, autoriza Swagger con el token de un usuario activo y ejecuta `POST /api/ai/ask` con una pregunta sobre un adjunto visible e indexado.
 
 Para reproducir los casos en Swagger con una base de desarrollo:
 
