@@ -9,7 +9,7 @@ using KnovaHub.DomainLayer.Repository;
 
 namespace KnovaHub.ApplicationLayer.Services;
 
-public class DocumentService : IDocumentService
+public partial class DocumentService : IDocumentService
 {
     private readonly IDocumentRepository _documents;
     private readonly ICategoryRepository _categories;
@@ -29,7 +29,9 @@ public class DocumentService : IDocumentService
     IDepartmentRepository departments,
     IUserRepository users,
     IFileStorage fileStorage,
-    IDocumentTextExtractor textExtractor)
+    IDocumentTextExtractor textExtractor,
+    IQueryLogRepository queryLogs,
+    TimeProvider clock)
     {
         _documents = documents;
         _categories = categories;
@@ -38,6 +40,8 @@ public class DocumentService : IDocumentService
         _users = users;
         _fileStorage = fileStorage;
         _textExtractor = textExtractor;
+        _queryLogs = queryLogs;
+        _clock = clock;
     }
 
     public async Task<List<DocumentDto>> GetAllAsync(
@@ -94,6 +98,14 @@ public class DocumentService : IDocumentService
         if (!await CanReadAsync(actor, document))
             throw new NotFoundException(
                 "El documento no existe o no tienes acceso.");
+
+        await _documents.RecordReadAsync(new DocumentRead
+        {
+            CompanyId = companyId,
+            UserId = actor.UserId,
+            DocumentId = document.Id,
+            ReadAt = _clock.GetUtcNow().UtcDateTime
+        });
 
         return ToDto(document);
     }
