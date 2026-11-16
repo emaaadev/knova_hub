@@ -167,6 +167,28 @@ if (registerForm) {
 
 const loginForm = document.getElementById("login-form");
 
+
+if (loginForm) {
+    const parametros = new URLSearchParams(window.location.search);
+
+    if (parametros.get("sesion") === "expirada") {
+        showMessage(
+            loginForm,
+            "Tu sesión ha expirado. Inicia sesión nuevamente.",
+            true
+        );
+
+        // Quitar el indicador de la URL para que el aviso
+        // no reaparezca al recargar la página.
+        window.history.replaceState(
+            null,
+            "",
+            window.location.pathname
+        );
+    }
+}
+
+
 if (loginForm) {
     const submitButton = loginForm.querySelector("button[type=submit]");
     submitButton.dataset.label = submitButton.textContent;

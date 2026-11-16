@@ -13,11 +13,59 @@ function getUser() {
     }
 }
 
+
+function tokenVigente(token) {
+    if (!token) return false;
+
+    try {
+        const partes = token.split(".");
+        if (partes.length !== 3) return false;
+
+        const base64 = partes[1]
+            .replace(/-/g, "+")
+            .replace(/_/g, "/");
+
+        const payload = JSON.parse(atob(base64));
+
+        if (typeof payload.exp !== "number") {
+            return false;
+        }
+
+        return Date.now() < payload.exp * 1000;
+    } catch {
+        return false;
+    }
+}
+
+
 function logout() {
     localStorage.removeItem("knovaToken");
     localStorage.removeItem("knovaUser");
     window.location.href = "../auth/login.html";
 }
+
+function manejarSesionVencida() {
+    // Evitar múltiples alertas si varias peticiones
+    if (window.sesionVencidaEnProceso) return;
+
+    window.sesionVencidaEnProceso = true;
+
+    // Eliminar los datos de autenticación.
+    localStorage.removeItem("knovaToken");
+    localStorage.removeItem("knovaUser");
+
+    // Mostrar alerta y esperar a que el usuario
+    // presione Aceptar.
+    alert(
+        "Tu sesión ha expirado.\n\n" +
+        "Por seguridad, debes iniciar sesión nuevamente."
+    );
+
+    // Redirigir al login después de aceptar.
+    window.location.replace("../auth/login.html?sesion=expirada");
+}
+
+
 
 // Roles que pueden ver los módulos de gestión (Usuarios, Solicitudes y Departamentos).
 const ROLES_GESTION = ["AdminEmpresa", "Supervisor"];
@@ -32,22 +80,35 @@ const ROLE_LABELS = {
 const PAGINAS_GESTION = ["usuarios", "solicitudes", "departamentos"];
 
 // Devuelve el usuario o redirige al login. Lanza si debe cambiar la contraseña.
+
 function requireSession() {
     const token = getToken();
     const user = getUser();
 
+    // No existe una sesión guardada.
     if (!token || !user) {
-        window.location.href = "../auth/login.html";
+        localStorage.removeItem("knovaToken");
+        localStorage.removeItem("knovaUser");
+
+        window.location.replace("../auth/login.html");
         return null;
     }
 
+    // Existe un token, pero ya venció.
+    if (!tokenVigente(token)) {
+        manejarSesionVencida();
+        return null;
+    }
+
+    // El usuario debe cambiar su contraseña.
     if (user.mustChangePassword) {
-        window.location.href = "cambiar-contrasena.html";
+        window.location.replace("cambiar-contrasena.html");
         return null;
     }
 
     return { token, user };
 }
+
 
 // Página actual: nombre del archivo sin extensión. Sirve para marcar el nav activo.
 function currentPage() {
@@ -74,6 +135,17 @@ async function api(path, options = {}) {
         if (error.name === "AbortError") throw error;
         throw new Error("No se pudo conectar con la API. Intenta de nuevo.");
     }
+
+    if (response.status === 401) {
+        manejarSesionVencida();
+
+        const error = new Error(
+            "Tu sesión ha expirado. Inicia sesión nuevamente."
+        );
+        error.status = 401;
+        throw error;
+    }
+
 
     if (response.ok && asBlob) return response.blob();
 
@@ -105,6 +177,8 @@ async function api(path, options = {}) {
 
     return data;
 }
+
+
 
 function setupShell() {
     const session = requireSession();
