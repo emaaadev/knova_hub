@@ -351,6 +351,36 @@ namespace KnovaHub.InfrastructureLayer.Migrations
                         });
                 });
 
+            modelBuilder.Entity("KnovaHub.DomainLayer.Entities.QueryLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AskedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DocumentIds")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Question")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("QueryLogs");
+                });
+
             modelBuilder.Entity("KnovaHub.DomainLayer.Entities.Role", b =>
                 {
                     b.Property<int>("Id")

@@ -20,6 +20,7 @@ public class KnovaHubDbContext : DbContext
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<DocumentTag> DocumentTags => Set<DocumentTag>();
     public DbSet<DocumentText> DocumentTexts => Set<DocumentText>();
+    public DbSet<QueryLog> QueryLogs => Set<QueryLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
