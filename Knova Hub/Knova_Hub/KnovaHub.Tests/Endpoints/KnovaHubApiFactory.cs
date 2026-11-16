@@ -1,5 +1,7 @@
 using KnovaHub.ApplicationLayer.Contract;
 using KnovaHub.DomainLayer.Repository;
+using KnovaHub.InfrastructureLayer.Repositories;
+using KnovaHub.InfrastructureLayer.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -24,6 +26,18 @@ public class KnovaHubApiFactory : WebApplicationFactory<Program>
     /// <summary>Lo usa el handler de la política AccesoDepartamento.</summary>
     public Mock<IDepartmentRepository> DepartmentRepository { get; } = new();
 
+    /// <summary>Simula el servicio de consultas a la IA.</summary>
+    public Mock<IAiService> AiService { get; } = new();
+
+    /// <summary>Simula el servicio de consultas de aplicación.</summary>
+    public Mock<IQueryService> QueryService { get; } = new();
+
+    /// <summary>Simula el repositorio de logs de consulta.</summary>
+    public Mock<IQueryLogRepository> QueryLogRepository { get; } = new();
+
+    /// <summary>Simula el repositorio de documentos.</summary>
+    public Mock<IDocumentRepository> DocumentRepository { get; } = new();
+
     public void ResetMocks()
     {
         AuthService.Reset();
@@ -32,6 +46,10 @@ public class KnovaHubApiFactory : WebApplicationFactory<Program>
         UserService.Reset();
         RegistrationRequestService.Reset();
         DepartmentRepository.Reset();
+        AiService.Reset();
+        QueryService.Reset();
+        QueryLogRepository.Reset();
+        DocumentRepository.Reset();
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -61,6 +79,18 @@ public class KnovaHubApiFactory : WebApplicationFactory<Program>
 
             services.RemoveAll<IDepartmentRepository>();
             services.AddSingleton(DepartmentRepository.Object);
+
+            services.RemoveAll<IAiService>();
+            services.AddSingleton(AiService.Object);
+
+            services.RemoveAll<IQueryService>();
+            services.AddSingleton(QueryService.Object);
+
+            services.RemoveAll<IQueryLogRepository>();
+            services.AddSingleton(QueryLogRepository.Object);
+
+            services.RemoveAll<IDocumentRepository>();
+            services.AddSingleton(DocumentRepository.Object);
         });
     }
 }

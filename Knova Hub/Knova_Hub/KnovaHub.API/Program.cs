@@ -46,12 +46,13 @@ builder.Services.AddScoped<IRegistrationRequestService, RegistrationRequestServi
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<ITagRepository, TagRepository>();
+builder.Services.AddScoped<IQueryLogRepository, QueryLogRepository>();
 
 // Servicios de documentos, categorías y etiquetas
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ITagService, TagService>();
-
+builder.Services.AddScoped<IQueryService, QueryService>();
 
 // Almacenamiento privado de archivos del módulo de conocimiento.
 // Se utiliza una carpeta fuera de wwwroot para impedir el acceso público.
@@ -76,6 +77,7 @@ builder.Services.AddSingleton<IDocumentTextExtractor, DocumentTextExtractor>();
 // IA (Claude). La clave va en User Secrets o en la variable de entorno Anthropic__ApiKey.
 var aiSettings = builder.Configuration.GetSection("Anthropic").Get<AiSettings>() ?? new AiSettings();
 builder.Services.AddSingleton(aiSettings);
+
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<IAiUsageLimiter, InMemoryAiUsageLimiter>();
 builder.Services.AddHttpClient<IAiService, ClaudeAiService>(client =>
