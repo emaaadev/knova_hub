@@ -84,6 +84,36 @@ public class AuthorizationEndpointTests
         Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
     }
 
+
+    // Test de token expirado: el endpoint no debe ejecutar el servicio, sino devolver 401.
+    [Test]
+    public async Task ListarDepartamentos_ConTokenExpirado_Devuelve401()
+    {
+        var token = TestData.GenerarToken(
+            _jwt,
+            DateTime.UtcNow.AddMinutes(-1),
+            rol: SystemRoles.AdminEmpresaRoleName,
+            userId: 10,
+            companyId: Empresa
+        );
+
+        _client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", token);
+
+        var respuesta = await _client.GetAsync("/api/departments");
+
+        Assert.That(
+            respuesta.StatusCode,
+            Is.EqualTo(HttpStatusCode.Unauthorized)
+        );
+
+        _factory.DepartmentService.Verify(
+            s => s.GetVisibleAsync(It.IsAny<Actor>()),
+            Times.Never
+        );
+    }
+
+
     [Test]
     public async Task ListarDepartamentos_Usuario_Devuelve403()
     {

@@ -6,16 +6,48 @@ if (currentYear) {
 }
 
 //login boton para redirigir login o dashboard
-const authNavButton = document.getElementById("authNavButton")
 
-if(authNavButton){
-    const token = localStorage.getItem("knovaToken")
+function tokenVigente(token) {
+    if (!token) return false;
 
-    if(token){
-        authNavButton.textContent = "Ir al panel"
-        authNavButton.href = "../dashboard/dashboard.html"
+    try {
+        const payload = token.split(".")[1];
+
+        if (!payload) return false;
+
+        const base64 = payload
+            .replace(/-/g, "+")
+            .replace(/_/g, "/");
+
+        const datos = JSON.parse(atob(base64));
+
+        // exp contiene la fecha de vencimiento en segundos.
+        if (typeof datos.exp !== "number") return false;
+
+        return Date.now() < datos.exp * 1000;
+    } catch {
+        return false;
     }
 }
+
+const authNavButton = document.getElementById("authNavButton");
+
+if (authNavButton) {
+    const token = localStorage.getItem("knovaToken");
+    const usuario = localStorage.getItem("knovaUser");
+
+    if (token && usuario && tokenVigente(token)) {
+        authNavButton.textContent = "Ir al panel";
+        authNavButton.href = "../dashboard/dashboard.html";
+    } else {
+        localStorage.removeItem("knovaToken");
+        localStorage.removeItem("knovaUser");
+
+        authNavButton.textContent = "Iniciar sesión";
+        authNavButton.href = "../auth/login.html";
+    }
+}
+
 // Animar las tarjetas una sola vez al entrar en pantalla.
 // Sin JavaScript, las tarjetas permanecen visibles.
 const cards = document.querySelectorAll(".feature");
