@@ -13,6 +13,12 @@ public interface IDocumentService
 
     Task<DocumentSummary> GetSummaryAsync(Actor actor);
 
+    Task<List<DocumentSuggestionDto>> GetRelatedAsync(
+        Actor actor, int documentId, CancellationToken cancellationToken);
+
+    Task<List<DocumentSuggestionDto>> GetRecommendationsAsync(
+        Actor actor, CancellationToken cancellationToken);
+
     // Obtener un documento por ID
     Task<DocumentDto> GetByIdAsync(
         Actor actor,

@@ -295,6 +295,35 @@ namespace KnovaHub.InfrastructureLayer.Migrations
                         });
                 });
 
+            modelBuilder.Entity("KnovaHub.DomainLayer.Entities.DocumentRead", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DocumentId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ReadAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentId", "CompanyId");
+
+                    b.HasIndex("CompanyId", "UserId", "ReadAt");
+
+                    b.ToTable("DocumentReads", (string)null);
+                });
+
             modelBuilder.Entity("KnovaHub.DomainLayer.Entities.DocumentTag", b =>
                 {
                     b.Property<int>("DocumentId")
@@ -377,6 +406,8 @@ namespace KnovaHub.InfrastructureLayer.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CompanyId", "UserId", "AskedAt");
 
                     b.ToTable("QueryLogs");
                 });
@@ -654,6 +685,16 @@ namespace KnovaHub.InfrastructureLayer.Migrations
                     b.Navigation("Company");
 
                     b.Navigation("Department");
+                });
+
+            modelBuilder.Entity("KnovaHub.DomainLayer.Entities.DocumentRead", b =>
+                {
+                    b.HasOne("KnovaHub.DomainLayer.Entities.Document", null)
+                        .WithMany()
+                        .HasForeignKey("DocumentId", "CompanyId")
+                        .HasPrincipalKey("Id", "CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("KnovaHub.DomainLayer.Entities.DocumentTag", b =>

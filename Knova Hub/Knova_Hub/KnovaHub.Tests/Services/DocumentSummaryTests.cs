@@ -22,7 +22,7 @@ public class DocumentSummaryTests
         var users = new Mock<IUserRepository>();
         var service = new DocumentService(documents.Object, Mock.Of<ICategoryRepository>(),
             Mock.Of<ITagRepository>(), departments.Object, users.Object, Mock.Of<IFileStorage>(),
-            Mock.Of<IDocumentTextExtractor>());
+            Mock.Of<IDocumentTextExtractor>(), Mock.Of<IQueryLogRepository>(), TimeProvider.System);
         var actor = new Actor(UserId, CompanyId, role);
         users.Setup(repo => repo.GetByIdInCompanyAsync(CompanyId, UserId))
             .ReturnsAsync(new User { IsActive = true, RoleId = roleId, DepartmentId = 4 });

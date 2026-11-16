@@ -208,6 +208,52 @@ public class DocumentRepository : IDocumentRepository
             .ToListAsync();
     }
 
+    public Task<List<DiscoveryDocument>> GetDiscoveryDocumentsAsync(
+        int companyId, int[]? departmentIds, bool includeReadCounts, CancellationToken cancellationToken)
+    {
+        const int maxTextLength = 8000;
+        return VisibleDocuments(companyId, departmentIds)
+            .AsNoTracking()
+            .Select(d => new DiscoveryDocument(
+                d.Id,
+                d.Title,
+                d.Description,
+                d.Type,
+                d.CategoryId,
+                d.DocumentTags.Select(tag => tag.TagId).ToArray(),
+                d.Content != null && d.Content.Length > maxTextLength
+                    ? d.Content.Substring(0, maxTextLength) : d.Content,
+                d.TextStatus == DocumentTextStatus.Indexado && d.Text != null
+                    ? (d.Text.Markdown.Length > maxTextLength
+                        ? d.Text.Markdown.Substring(0, maxTextLength) : d.Text.Markdown)
+                    : null,
+                d.UpdatedAt ?? d.CreatedAt,
+                includeReadCounts
+                    ? _context.DocumentReads.LongCount(read => read.CompanyId == companyId && read.DocumentId == d.Id)
+                    : 0))
+            .AsSplitQuery()
+            .ToListAsync(cancellationToken);
+    }
+
+    public Task<List<int>> GetRecentlyReadIdsAsync(
+        int companyId, int userId, DateTime since, int limit, CancellationToken cancellationToken)
+    {
+        return _context.DocumentReads
+            .Where(read => read.CompanyId == companyId && read.UserId == userId && read.ReadAt >= since)
+            .GroupBy(read => read.DocumentId)
+            .OrderByDescending(group => group.Max(read => read.ReadAt))
+            .ThenByDescending(group => group.Key)
+            .Take(limit)
+            .Select(group => group.Key)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task RecordReadAsync(DocumentRead read)
+    {
+        _context.DocumentReads.Add(read);
+        await SaveChangesAsync();
+    }
+
     public Task DeleteAsync(Document document)
     {
         _context.Documents.Remove(document);

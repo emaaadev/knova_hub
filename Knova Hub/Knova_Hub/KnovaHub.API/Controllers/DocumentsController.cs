@@ -57,6 +57,26 @@ public class DocumentsController : ControllerBase
         return Ok(await _documents.GetByIdAsync(actor, id));
     }
 
+    [HttpGet("{id:int}/related")]
+    public async Task<ActionResult<List<DocumentSuggestionDto>>> GetRelated(
+        int id, CancellationToken cancellationToken)
+    {
+        if (!TryGetActor(out var actor))
+            return Unauthorized();
+
+        return Ok(await _documents.GetRelatedAsync(actor, id, cancellationToken));
+    }
+
+    [HttpGet("recommendations")]
+    public async Task<ActionResult<List<DocumentSuggestionDto>>> GetRecommendations(
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetActor(out var actor))
+            return Unauthorized();
+
+        return Ok(await _documents.GetRecommendationsAsync(actor, cancellationToken));
+    }
+
     // Crear documento
     [HttpPost]
     public async Task<ActionResult<DocumentDto>> Create(

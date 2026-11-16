@@ -20,6 +20,7 @@ public class KnovaHubDbContext : DbContext
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<DocumentTag> DocumentTags => Set<DocumentTag>();
     public DbSet<DocumentText> DocumentTexts => Set<DocumentText>();
+    public DbSet<DocumentRead> DocumentReads => Set<DocumentRead>();
     public DbSet<QueryLog> QueryLogs => Set<QueryLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -285,6 +286,20 @@ public class KnovaHubDbContext : DbContext
                 .HasForeignKey(dt => new { dt.TagId, dt.CompanyId })
                 .HasPrincipalKey(t => new { t.Id, t.CompanyId })
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<QueryLog>()
+            .HasIndex(log => new { log.CompanyId, log.UserId, log.AskedAt });
+
+        modelBuilder.Entity<DocumentRead>(e =>
+        {
+            e.ToTable("DocumentReads");
+            e.HasKey(read => read.Id);
+            e.HasIndex(read => new { read.CompanyId, read.UserId, read.ReadAt });
+            e.HasOne<Document>().WithMany()
+                .HasForeignKey(read => new { read.DocumentId, read.CompanyId })
+                .HasPrincipalKey(document => new { document.Id, document.CompanyId })
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<DocumentText>(e =>

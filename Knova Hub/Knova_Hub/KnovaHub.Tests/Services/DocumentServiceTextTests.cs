@@ -52,7 +52,7 @@ public class DocumentServiceTextTests
 
         _service = new DocumentService(_documents.Object, Mock.Of<ICategoryRepository>(),
             Mock.Of<ITagRepository>(), Mock.Of<IDepartmentRepository>(), users.Object,
-            _storage.Object, _extractor.Object);
+            _storage.Object, _extractor.Object, Mock.Of<IQueryLogRepository>(), TimeProvider.System);
     }
 
     private static UploadDocumentFileDto Archivo(string nombre = "manual.pdf", byte[]? bytes = null)

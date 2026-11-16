@@ -43,6 +43,14 @@ public interface IDocumentRepository
         int companyId,
         int[]? visibleDepartmentIds);
 
+    Task<List<DiscoveryDocument>> GetDiscoveryDocumentsAsync(
+        int companyId, int[]? departmentIds, bool includeReadCounts, CancellationToken cancellationToken);
+
+    Task<List<int>> GetRecentlyReadIdsAsync(
+        int companyId, int userId, DateTime since, int limit, CancellationToken cancellationToken);
+
+    Task RecordReadAsync(DocumentRead read);
+
     // El texto guardado se borra en cascada desde la base de datos.
     Task DeleteAsync(Document document);
 }
@@ -64,3 +72,15 @@ public record RecentDocument(
     DocumentType Type,
     DateTime CreatedAt,
     DateTime? UpdatedAt);
+
+public record DiscoveryDocument(
+    int Id,
+    string Title,
+    string? Description,
+    DocumentType Type,
+    int? CategoryId,
+    int[] TagIds,
+    string? Content,
+    string? Markdown,
+    DateTime ActivityAt,
+    long ReadCount);
