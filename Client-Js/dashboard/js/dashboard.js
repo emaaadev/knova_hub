@@ -101,8 +101,116 @@ async function loadStats() {
     }
 }
 
+async function loadRecommendations() {
+    const status = $("rec-status");
+    try {
+        const items = await App.api("/api/documents/recommendations");
+        status.hidden = items.length > 0;
+        status.textContent = "Aún no hay recomendaciones. Abre algunos documentos o haz una consulta.";
+        $("recommendations").replaceChildren(...items.map(item => {
+            const li = document.createElement("li");
+            const a = document.createElement("a");
+            a.href = App.documentLink(item.id, item.type);
+            a.textContent = item.title;
+            li.append(a, ` · ${contentTypes[item.type] || "Documento"}`);
+            return li;
+        }));
+    } catch (error) {
+        status.hidden = false;
+        status.textContent = `No se pudieron cargar las recomendaciones. ${error.message}`;
+    }
+}
+const HISTORY_KEY = "knovaAiHistory";
+
+function readHistory() {
+    try { return JSON.parse(sessionStorage.getItem(HISTORY_KEY) || "[]"); }
+    catch { return []; }
+}
+
+function saveHistory(history) {
+    try { sessionStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 20))); } catch {}
+}
+
+function showAiMessage(id, text = "") {
+    $(id).textContent = text;
+    $(id).hidden = !text;
+}
+
+function renderAnswer(entry) {
+    App.renderAiText($("ai-answer-text"), entry.answer || "La IA no devolvió una respuesta para esta pregunta.");
+    const sources = entry.sources || [];
+    $("ai-no-sources").hidden = sources.length > 0;
+    $("ai-sources").replaceChildren(...sources.map(source => {
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = App.documentLink(source.documentId);  
+        a.textContent = source.title;
+        li.append(a);
+        return li;
+    }));
+    $("ai-answer").hidden = false;
+}
+
+function renderHistory() {
+    const history = readHistory();
+    $("ai-history-box").hidden = history.length === 0;
+    $("ai-history").replaceChildren(...history.map((entry, index) => {
+        const li = document.createElement("li");
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "btn btn-sm";
+        button.textContent = "Ver";
+        button.addEventListener("click", () => {
+            $("ai-question").value = entry.question;
+            renderAnswer(entry);
+        });
+        li.append(`${entry.question} `, button);
+        return li;
+    }));
+}
+
+async function askAi(event) {
+    event.preventDefault();
+    const question = $("ai-question").value.trim();
+    if (!question) return showAiMessage("ai-error", "Escribe una pregunta.");
+
+    showAiMessage("ai-error");
+    showAiMessage("ai-limit");
+    $("ai-answer").hidden = true;
+    $("ai-loading").hidden = false;
+    $("ai-submit").disabled = true;
+
+    try {
+        const data = await App.api("/api/ai/ask", { method: "POST", body: { question } });
+        const entry = { question, answer: data?.answer || "", sources: data?.sources || [] };
+        renderAnswer(entry);
+        saveHistory([entry, ...readHistory()]);
+        renderHistory();
+    } catch (error) {
+        if (error.status === 429) {
+            showAiMessage("ai-limit", error.message ||
+                "Alcanzaste el límite de consultas a la IA. Intenta de nuevo más tarde.");
+        } else {
+            showAiMessage("ai-error", error.message || "No se pudo consultar la IA.");
+        }
+    } finally {
+        $("ai-loading").hidden = true;
+        $("ai-submit").disabled = false;
+    }
+}
+
+function setupAi() {
+    $("ai-form").addEventListener("submit", askAi);
+    $("ai-question").addEventListener("input", () => {
+        $("ai-counter").textContent = `${$("ai-question").value.length} / 1000`;
+    });
+    renderHistory();
+}
+
 if (session) {
     renderCompany(session.user);
     configureQuickActions(session.user.role);
     loadStats();
+    loadRecommendations();
+    setupAi();
 }

@@ -14,6 +14,7 @@ let departments = [];
 let selected = null;
 let editing = null;
 let busy = false;
+let relatedRequest = null;
 
 function message(id, text = "") {
     $(id).textContent = text;
@@ -148,6 +149,32 @@ function textStatusNote(item) {
     return "";
 }
 
+async function loadRelated(id) {
+    relatedRequest?.abort();
+    const request = new AbortController();
+    relatedRequest = request;
+    $("related-status").hidden = false;
+    $("related-status").textContent = "Cargando relacionados…";
+    $("related").replaceChildren();
+    try {
+        const items = await App.api(`${documentsPath}/${id}/related`, { signal: request.signal });
+        if (request.signal.aborted) return;
+        $("related-status").hidden = items.length > 0;
+        $("related-status").textContent = "No hay documentos relacionados.";
+        $("related").replaceChildren(...items.map(item => {
+            const li = document.createElement("li");
+            const a = document.createElement("a");
+            a.href = App.documentLink(item.id, item.type);
+            a.textContent = item.title;
+            li.append(a, ` · ${typeNames[item.type] || ""}`);
+            return li;
+        }));
+    } catch (error) {
+        if (request.signal.aborted) return;
+        $("related-status").textContent = `No se pudieron cargar los relacionados. ${error.message}`;
+    }
+}
+
 function showDetail(item) {
     selected = item;
     $("detail-title").textContent = item.title;
@@ -169,12 +196,15 @@ function showDetail(item) {
     $("detail").hidden = false;
     message("detail-error");
     $("detail-title").focus();
+    loadRelated(item.id);
 }
 
 async function openDetail(id) {
     const item = await App.api(`${documentsPath}/${id}`);
     const belongsHere = isWiki ? item.type === 2 || item.type === 3 : item.type === 1;
-    if (!belongsHere) throw new Error("Este recurso pertenece a otro módulo.");
+        if (!belongsHere) { location.replace(App.documentLink(item.id, item.type));
+        return;
+    }
     showDetail(item);
 }
 

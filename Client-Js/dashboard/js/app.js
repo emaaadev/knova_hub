@@ -41,6 +41,7 @@ function tokenVigente(token) {
 function logout() {
     localStorage.removeItem("knovaToken");
     localStorage.removeItem("knovaUser");
+    try { sessionStorage.removeItem("knovaAiHistory"); } catch {}
     window.location.href = "../auth/login.html";
 }
 
@@ -166,7 +167,8 @@ async function api(path, options = {}) {
             401: "La sesión venció. Inicia sesión de nuevo.",
             403: "No tienes permiso para realizar esta operación.",
             404: "El recurso no está disponible.",
-            413: "El archivo supera el límite permitido."
+            413: "El archivo supera el límite permitido.",
+            429: "Alcanzaste el límite de consultas a la IA. Intenta más tarde.",
         };
         const message = typeof data === "string" ? data : data?.message || validation;
         const error = new Error(message || fallback[response.status] || "No se pudo completar la operación.");
@@ -278,7 +280,6 @@ function prepararMenuMovil() {
     sidebar.querySelectorAll(".nav-item").forEach((item) => item.addEventListener("click", cerrar));
 }
 
-// Escapa HTML para insertar datos del servidor de forma segura.
 function esc(value) {
     return String(value ?? "")
         .replaceAll("&", "&amp;")
@@ -287,5 +288,50 @@ function esc(value) {
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#39;");
 }
+function renderAiText(container, text){
+    container.replaceChildren();
+    let list = null;
+    for (const rawLine of String(text ?? "").split(/\r?\n/)) {
+        let line = rawLine.trim();
+        if (!line) { list = null; continue; }
 
-window.App = { API_BASE_URL, getToken, getUser, requireSession, setupShell, currentPage, api, logout, esc };
+        const istItem = /^([-*•]|\d+\.)\s+/.test(line);
+        const isHeading = /^#{1,6}\s+/.test(line);
+        line = line.replace (/^#{1,6}\s+/, "").replace(/^([-*•])\s+/, "");
+        
+        const block = document.createElement(istItem ? "li" : "p");
+        appendInline(block, line, isHeading);
+
+        if (istItem) {
+            if (!list) { list = document.createElement("ul"); container.append(list); }
+            list.append(block);
+        } else {
+            list = null;
+            container.append(block);
+        }
+    }
+}
+
+function appendInline(parent, line, forceBold) {
+    line.split(/\*\*(.+?)\*\*/g).forEach((part, index) => {
+        const clean = part.replace(/[*_`]/g, "");
+        if (!clean) return;
+        if (index % 2 === 1 || forceBold) {
+            const strong = document.createElement("strong");
+            strong.textContent = clean;
+            parent.append(strong);
+        } else {
+            parent.append(document.createTextNode(clean));
+        }
+    });
+
+}
+
+function documentLink(id, type) {
+    const query = new URLSearchParams({ id });
+    if (type === 2 || type === 3) query.set("tipo", "wiki");
+    return `documentos.html?${query}`;
+}
+// Escapa HTML para insertar datos del servidor de forma segura.
+
+window.App = { API_BASE_URL, getToken, getUser, requireSession, setupShell, currentPage, api, logout, esc, renderAiText, documentLink };

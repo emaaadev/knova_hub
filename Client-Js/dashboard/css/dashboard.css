@@ -445,3 +445,31 @@ img {
 .form-grid[hidden] {
     display: none;
 }
+
+.ai-form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font: inherit;
+    resize: vertical;
+}
+.ai-answer {
+    margin-top: 16px;
+    padding: 16px;
+    background: var(--surface);
+    border-radius: 8px;
+}
+.ai-answer h3, .related h3 { margin: 16px 0 8px; color: var(--heading); font-size: 1rem; }
+.ai-answer-text p { margin: 0 0 8px; }
+.ai-answer-text ul { margin: 0 0 8px; padding-left: 20px; }
+.ai-limit {
+    background: #fff4e5;
+    color: #8a4b00;
+    border: 1px solid #ffd59a;
+    padding: 10px 12px;
+    border-radius: 8px;
+}
+.ai-history { margin-top: 16px; }
+.ai-history summary { cursor: pointer; color: var(--heading); font-weight: 600; }
+.related { margin-top: 20px; border-top: 1px solid var(--border); padding-top: 12px; }

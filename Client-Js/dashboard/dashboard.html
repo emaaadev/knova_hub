@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <meta name="description"
-          content="Dashboard de Knova Hub para la gestión del conocimiento empresarial.">
+        content="Dashboard de Knova Hub para la gestión del conocimiento empresarial.">
 
     <title>Dashboard — Knova Hub</title>
 
@@ -32,7 +32,7 @@
                 <a class="nav-item" data-page="departamentos" data-role-gestion href="departamentos.html">Departamentos</a>
                 <a class="nav-item" data-page="documentos" href="documentos.html">Documentos</a>
                 <a class="nav-item" href="documentos.html?tipo=wiki">Wikis y minutas</a>
-                <a class="nav-item" href="#">Recomendaciones (IA)</a>
+                <a class="nav-item" href="dashboard.html#asistente-ia">Recomendaciones (IA)</a>
             </nav>
         </aside>
 
@@ -84,6 +84,40 @@
                         <span class="summary-value" id="stat-users">—</span>
                         <span class="summary-label">Usuarios</span>
                     </article>
+                </section>
+                    <section class="panel ai-panel" id="asistente-ia" aria-labelledby="ai-title">
+                    <h2 id="ai-title">Pregúntale a Knova</h2>
+                    <form id="ai-form" class="ai-form">
+                        <label class="field" for="ai-question">Escribe tu pregunta</label>
+                        <textarea id="ai-question" rows="3" maxlength="1000" required
+                                placeholder="Ej.: ¿Cuál es la política de vacaciones?"></textarea>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" id="ai-submit">Consultar</button>
+                            <span class="inline-note" id="ai-counter">0 / 1000</span>
+                        </div>
+                    </form>
+
+                    <p class="empty-text" id="ai-loading" role="status" hidden>Consultando a la IA…</p>
+                    <p class="form-message is-error" id="ai-error" role="alert" hidden></p>
+                    <p class="form-message ai-limit" id="ai-limit" role="alert" hidden></p>
+
+                    <article class="ai-answer" id="ai-answer" hidden>
+                        <div class="knowledge-text ai-answer-text" id="ai-answer-text"></div>
+                        <h3>Fuentes</h3>
+                        <p class="empty-text" id="ai-no-sources" hidden>No se encontraron documentos relacionados con tu pregunta.</p>
+                        <ul class="activity-list" id="ai-sources"></ul>
+                    </article>
+
+                    <details class="ai-history" id="ai-history-box" hidden>
+                        <summary>Historial de esta sesión</summary>
+                        <ul class="activity-list" id="ai-history"></ul>
+                    </details>
+                </section>
+
+                <section class="panel" aria-labelledby="rec-title">
+                    <h2 id="rec-title">Recomendado para ti</h2>
+                    <p class="empty-text" id="rec-status" role="status">Cargando recomendaciones…</p>
+                    <ul class="activity-list" id="recommendations"></ul>
                 </section>
 
                 <section class="panel">

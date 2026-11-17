@@ -25,7 +25,7 @@
                 <a class="nav-item" data-page="departamentos" data-role-gestion href="departamentos.html">Departamentos</a>
                 <a class="nav-item" data-page="documentos" href="documentos.html">Documentos</a>
                 <a class="nav-item" href="documentos.html?tipo=wiki">Wikis y minutas</a>
-                <a class="nav-item" href="#">Recomendaciones (IA)</a>
+                <a class="nav-item" href="dashboard.html#asistente-ia">Recomendaciones (IA)</a>
             </nav>
         </aside>
 
@@ -130,6 +130,11 @@
                         <button class="btn" id="remove-file" type="button" hidden>Quitar archivo</button>
                         <button class="btn" id="edit" type="button" hidden>Editar</button>
                         <button class="btn btn-danger" id="delete" type="button" hidden>Eliminar</button>
+                    </div>
+                    <div class="related" aria-labelledby="related-title">
+                        <h3 id="related-title">Relacionados</h3>
+                        <p class="empty-text" id="related-status" role="status"></p>
+                        <ul class="activity-list" id="related"></ul>
                     </div>
                 </section>
             </main>
