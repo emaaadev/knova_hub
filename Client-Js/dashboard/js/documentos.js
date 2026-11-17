@@ -73,6 +73,10 @@ function renderList(items) {
             <td><button class="btn btn-sm" type="button" data-id="${Number(item.id)}">Ver</button></td>
         </tr>
     `).join("");
+
+    if (!items.length) {
+        UI.filaMensaje($("items"), `No hay ${isWiki ? "wikis ni minutas" : "documentos"} para mostrar.`);
+    }
 }
 
 function getListFilters() {
@@ -116,6 +120,10 @@ async function loadList({ reloadOptions = false } = {}) {
     const { signal } = request;
 
     $("list-status").textContent = "Cargando…";
+    // Con filtros o búsqueda se conservan las filas anteriores para evitar parpadeos.
+    if (!$("items").children.length || $("items").querySelector(".estado-fila")) {
+        UI.filaMensaje($("items"), "Cargando…", "cargando");
+    }
     message("list-error");
 
     try {
@@ -136,7 +144,7 @@ async function loadList({ reloadOptions = false } = {}) {
         if (!signal.aborted) renderList(results);
     } catch (error) {
         if (signal.aborted) return;
-        $("items").replaceChildren();
+        UI.filaMensaje($("items"), "No se pudo cargar el listado.", "error", () => loadList());
         $("list-status").textContent = "No se pudo cargar el listado.";
         message("list-error", error.message);
     }
@@ -232,6 +240,7 @@ async function openEditor(item = null) {
     const [categories, tags] = await Promise.all([App.api("/api/categories"), App.api("/api/tags")]);
     editing = item;
     $("editor-form").reset();
+    Validar.limpiar($("editor"));
     const createTitle = isWiki ? "Crear wiki o minuta" : "Crear documento";
     $("editor-title").textContent = item
         ? `Editar ${typeNames[item.type].toLowerCase()}`
@@ -269,13 +278,18 @@ async function openEditor(item = null) {
 }
 
 async function saveItem() {
-    const file = $("file-field").hidden ? null : $("file").files[0];
-    if (file && (file.size === 0 || file.size > 20 * 1024 * 1024 || !/\.(pdf|docx|txt|md)$/i.test(file.name))) {
-        throw new Error("Selecciona un PDF, DOCX, TXT o MD de hasta 20 MB y con contenido.");
-    }
+    const R = Validar.reglas;
+    const valido = Validar.revisar([
+        { campo: "title", reglas: [R.obligatorio("El título es obligatorio."), R.maximo(200)] },
+        { campo: "department", reglas: [R.obligatorio("Selecciona el departamento al que pertenece.")] },
+        { campo: "description", reglas: [R.maximo(1000)] },
+        { campo: "file", reglas: [R.archivo()] }
+    ]);
+    if (!valido) return;
 
+    const file = $("file-field").hidden ? null : $("file").files[0];
     const title = $("title").value.trim();
-    if (!title) throw new Error("El título es obligatorio.");
+    const creando = !editing;
     const visibility = Number($("visibility").value);
     const body = {
         title,
@@ -289,6 +303,7 @@ async function saveItem() {
     };
 
     $("editor").inert = true;
+    UI.ocupado($("save"), true, "Guardando…");
     try {
         const path = editing ? `${documentsPath}/${editing.id}` : documentsPath;
         editing = await App.api(path, { method: editing ? "PUT" : "POST", body });
@@ -305,28 +320,55 @@ async function saveItem() {
             }
         }
         showDetail(editing);
+        UI.aviso(creando ? "Creado correctamente." : "Cambios guardados.");
         await loadList({ reloadOptions: true });
     } finally {
         $("editor").inert = false;
+        UI.ocupado($("save"), false);
     }
 }
 
 async function removeItem() {
     if (!selected || !canModify(selected)) return;
-    if (!confirm(`¿Eliminar «${selected.title}» y su archivo adjunto, si lo tiene?`)) return;
+    const confirmado = await UI.confirmar({
+        titulo: `Eliminar ${typeNames[selected.type].toLowerCase()}`,
+        mensaje: `¿Eliminar «${selected.title}»${selected.hasFile ? " y su archivo adjunto" : ""}? Esta acción no se puede deshacer.`,
+        aceptar: "Eliminar",
+        peligro: true
+    });
+    if (!confirmado) return;
 
-    await App.api(`${documentsPath}/${selected.id}`, { method: "DELETE" });
-    $("detail").hidden = true;
-    selected = null;
-    await loadList({ reloadOptions: true });
+    UI.ocupado($("delete"), true, "Eliminando…");
+    try {
+        await App.api(`${documentsPath}/${selected.id}`, { method: "DELETE" });
+        const titulo = selected.title;
+        $("detail").hidden = true;
+        selected = null;
+        UI.aviso(`«${titulo}» eliminado.`);
+        await loadList({ reloadOptions: true });
+    } finally {
+        UI.ocupado($("delete"), false);
+    }
 }
 
 async function removeFile() {
     if (!selected || !canModify(selected)) return;
-    if (!confirm(`¿Quitar «${selected.originalFileName}» de este recurso?`)) return;
+    const confirmado = await UI.confirmar({
+        titulo: "Quitar archivo adjunto",
+        mensaje: `¿Quitar «${selected.originalFileName}» de este recurso?`,
+        aceptar: "Quitar archivo",
+        peligro: true
+    });
+    if (!confirmado) return;
 
-    await App.api(`${documentsPath}/${selected.id}/file`, { method: "DELETE" });
-    await openDetail(selected.id);
+    UI.ocupado($("remove-file"), true, "Quitando…");
+    try {
+        await App.api(`${documentsPath}/${selected.id}/file`, { method: "DELETE" });
+        await openDetail(selected.id);
+        UI.aviso("Archivo quitado.");
+    } finally {
+        UI.ocupado($("remove-file"), false);
+    }
 }
 
 async function downloadFile() {

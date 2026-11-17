@@ -61,7 +61,7 @@ async function cargarUsuarios() {
     const vacio = document.getElementById("vacio-usuarios");
     const subtitulo = document.getElementById("list-subtitle");
 
-    cuerpo.innerHTML = "";
+    UI.filaMensaje(cuerpo, "Cargando usuarios…", "cargando");
     vacio.hidden = true;
 
     let usuarios;
@@ -69,8 +69,10 @@ async function cargarUsuarios() {
         usuarios = await App.api("/api/users");
     } catch (err) {
         subtitulo.textContent = "No se pudieron cargar los usuarios.";
+        UI.filaMensaje(cuerpo, `${err.message}`, "error", cargarUsuarios);
         return;
     }
+    cuerpo.innerHTML = "";
 
     if (usuarioActual.role === "AdminEmpresa") {
         subtitulo.textContent = `${usuarios.length} usuario(s) en tu empresa.`;
@@ -128,11 +130,22 @@ async function cargarUsuarios() {
 }
 
 async function cambiarEstado(user, isActive) {
+    if (!isActive) {
+        const confirmado = await UI.confirmar({
+            titulo: "Desactivar usuario",
+            mensaje: `¿Desactivar a «${user.fullName}»? Podrás volver a activarlo después.`,
+            aceptar: "Desactivar",
+            peligro: true
+        });
+        if (!confirmado) return;
+    }
+
     try {
         await App.api(`/api/users/${user.id}/active`, { method: "PATCH", body: { isActive } });
+        UI.aviso(isActive ? "Usuario activado." : "Usuario desactivado.");
         await cargarUsuarios();
     } catch (err) {
-        alert(err.message);
+        UI.aviso(err.message, "error");
     }
 }
 
@@ -150,8 +163,18 @@ function abrirFormulario(modo, user = null) {
     const campoRol = document.getElementById("campo-rol");
     const campoDepto = document.getElementById("campo-departamento");
 
-    const titulo = { create: "Nuevo usuario", edit: "Editar usuario", role: "Cambiar rol" }[modo];
+    const titulo = {
+        create: "Crear usuario",
+        edit: "Editar usuario",
+        role: `Cambiar rol de ${user?.fullName || "usuario"}`
+    }[modo];
     document.getElementById("form-titulo").textContent = titulo;
+
+    // Al cambiar solo el rol no tiene sentido mostrar nombre y correo.
+    Validar.limpiar(card);
+    const soloRol = modo === "role";
+    document.getElementById("f-nombre").closest(".field").hidden = soloRol;
+    document.getElementById("f-email").closest(".field").hidden = soloRol;
 
     if (modo === "create") {
         campoRol.hidden = false;
@@ -193,9 +216,26 @@ function mostrarMensaje(texto, esError) {
 }
 
 async function guardar() {
+    const R = Validar.reglas;
+    document.getElementById("form-message").hidden = true;
+
+    const valido = Validar.revisar([
+        { campo: "f-nombre", reglas: [R.obligatorio("El nombre completo es obligatorio.")] },
+        { campo: "f-email", reglas: [R.obligatorio("El correo es obligatorio."), R.correo()] },
+        {
+            campo: "f-departamento",
+            reglas: [(valor) => valor ? "" : (document.getElementById("f-departamento").options.length
+                ? "Selecciona un departamento."
+                : "No hay departamentos activos. Crea uno en la sección Departamentos.")]
+        }
+    ]);
+    if (!valido) return;
+
     const nombre = document.getElementById("f-nombre").value.trim();
     const email = document.getElementById("f-email").value.trim();
     const rol = Number(document.getElementById("f-rol").value);
+    const boton = document.getElementById("btn-guardar");
+    UI.ocupado(boton, true, "Guardando…");
 
     try {
         if (modoFormulario === "create") {
@@ -207,6 +247,7 @@ async function guardar() {
             const creado = await App.api("/api/users", { method: "POST", body });
 
             cerrarFormulario();
+            UI.aviso("Usuario creado.");
             document.getElementById("temp-password").textContent = creado.temporaryPassword;
             document.getElementById("card-temp").hidden = false;
             document.getElementById("card-temp").scrollIntoView({ behavior: "smooth" });
@@ -214,6 +255,7 @@ async function guardar() {
             const body = { fullName: nombre, email };
             await App.api(`/api/users/${usuarioEnEdicion.id}`, { method: "PUT", body });
             cerrarFormulario();
+            UI.aviso("Usuario actualizado.");
             await cargarUsuarios();
         } else if (modoFormulario === "role") {
             const depto = document.getElementById("campo-departamento").hidden
@@ -225,9 +267,13 @@ async function guardar() {
                 body: { roleId: rol, departmentId: depto }
             });
             cerrarFormulario();
+            UI.aviso("Rol actualizado.");
             await cargarUsuarios();
         }
     } catch (err) {
-        mostrarMensaje(err.message, true);
+        const camposApi = { email: "f-email", fullname: "f-nombre", departmentid: "f-departamento" };
+        if (!Validar.errorDeServidor(err, camposApi)) mostrarMensaje(err.message, true);
+    } finally {
+        UI.ocupado(boton, false);
     }
 }
