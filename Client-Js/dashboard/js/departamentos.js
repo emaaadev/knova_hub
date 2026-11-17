@@ -41,15 +41,17 @@ async function cargarDepartamentos() {
     const vacio = document.getElementById("vacio-departamentos");
     const subtitulo = document.getElementById("list-subtitle");
 
-    cuerpo.innerHTML = "";
+    UI.filaMensaje(cuerpo, "Cargando departamentos…", "cargando");
     vacio.hidden = true;
 
     try {
         todosDepartamentos = await App.api("/api/departments");
     } catch (err) {
         subtitulo.textContent = "No se pudieron cargar los departamentos.";
+        UI.filaMensaje(cuerpo, `${err.message}`, "error", cargarDepartamentos);
         return;
     }
+    cuerpo.innerHTML = "";
 
     subtitulo.textContent = usuarioActual.role === "AdminEmpresa"
         ? `${todosDepartamentos.length} departamento(s) en tu empresa.`
@@ -99,11 +101,22 @@ async function cargarDepartamentos() {
 }
 
 async function cambiarEstado(depto, isActive) {
+    if (!isActive) {
+        const confirmado = await UI.confirmar({
+            titulo: "Desactivar departamento",
+            mensaje: `¿Desactivar «${depto.name}»? Podrás volver a activarlo después.`,
+            aceptar: "Desactivar",
+            peligro: true
+        });
+        if (!confirmado) return;
+    }
+
     try {
         await App.api(`/api/departments/${depto.id}`, { method: "PUT", body: { name: depto.name, isActive } });
+        UI.aviso(isActive ? "Departamento activado." : "Departamento desactivado.");
         await cargarDepartamentos();
     } catch (err) {
-        alert(err.message);
+        UI.aviso(err.message, "error");
     }
 }
 
@@ -115,7 +128,8 @@ function abrirFormulario(modo, depto = null) {
     card.hidden = false;
     card.scrollIntoView({ behavior: "smooth" });
 
-    document.getElementById("form-titulo").textContent = modo === "create" ? "Nuevo departamento" : "Editar departamento";
+    Validar.limpiar(card);
+    document.getElementById("form-titulo").textContent = modo === "create" ? "Crear departamento" : "Editar departamento";
     document.getElementById("form-message").hidden = true;
     document.getElementById("campo-activo").hidden = modo === "create";
 
@@ -133,7 +147,16 @@ function mostrarMensaje(boxId, texto, esError) {
 }
 
 async function guardarDepartamento() {
+    const R = Validar.reglas;
+    document.getElementById("form-message").hidden = true;
+
+    if (!Validar.revisar([
+        { campo: "f-nombre", reglas: [R.obligatorio("El nombre del departamento es obligatorio.")] }
+    ])) return;
+
     const nombre = document.getElementById("f-nombre").value.trim();
+    const boton = document.getElementById("btn-guardar");
+    UI.ocupado(boton, true, "Guardando…");
 
     try {
         if (modoFormulario === "create") {
@@ -146,9 +169,14 @@ async function guardarDepartamento() {
             });
         }
         document.getElementById("card-form").hidden = true;
+        UI.aviso(modoFormulario === "create" ? "Departamento creado." : "Departamento actualizado.");
         await cargarDepartamentos();
     } catch (err) {
-        mostrarMensaje("form-message", err.message, true);
+        // 409: ya existe un departamento con ese nombre en la empresa.
+        if (err.status === 409) Validar.mostrar(document.getElementById("f-nombre"), err.message);
+        else mostrarMensaje("form-message", err.message, true);
+    } finally {
+        UI.ocupado(boton, false);
     }
 }
 
@@ -164,11 +192,19 @@ async function cargarSupervisores() {
             .map((s) => `<option value="${s.id}">${App.esc(s.fullName)}</option>`)
             .join("");
 
-        if (supervisores.length > 0) {
+        const sinSupervisores = supervisores.length === 0;
+        document.getElementById("s-guardar").disabled = sinSupervisores;
+        if (sinSupervisores) {
+            document.getElementById("s-departamentos").innerHTML =
+                '<p class="empty-state">No hay supervisores en tu empresa. Crea un usuario con rol Supervisor para asignarle departamentos.</p>';
+        } else {
             await cargarAsignacion();
         }
     } catch {
         supervisores = [];
+        document.getElementById("s-guardar").disabled = true;
+        document.getElementById("s-departamentos").innerHTML =
+            '<p class="empty-state">No se pudieron cargar los supervisores.</p>';
     }
 }
 
@@ -199,10 +235,20 @@ async function cargarAsignacion() {
 }
 
 async function guardarAsignacion() {
+    document.getElementById("s-message").hidden = true;
+
     const supervisorId = Number(document.getElementById("s-supervisor").value);
+    if (!supervisorId) {
+        mostrarMensaje("s-message", "Selecciona un supervisor.", true);
+        return;
+    }
+
     const departmentIds = Array.from(
         document.querySelectorAll("#s-departamentos input:checked")
     ).map((el) => Number(el.value));
+
+    const boton = document.getElementById("s-guardar");
+    UI.ocupado(boton, true, "Guardando…");
 
     try {
         await App.api(`/api/supervisors/${supervisorId}/departments`, {
@@ -210,7 +256,10 @@ async function guardarAsignacion() {
             body: { departmentIds }
         });
         mostrarMensaje("s-message", "Asignación guardada.", false);
+        UI.aviso("Asignación de departamentos guardada.");
     } catch (err) {
         mostrarMensaje("s-message", err.message, true);
+    } finally {
+        UI.ocupado(boton, false);
     }
 }

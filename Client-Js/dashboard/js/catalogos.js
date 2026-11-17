@@ -49,19 +49,27 @@ function render() {
                 </button>
                 <button type="button" class="btn btn-sm ${item.isActive ? "btn-danger" : ""}"
                     data-action="toggle" data-id="${Number(item.id)}">
-                    ${item.isActive ? "Desactivar" : "Reactivar"}
+                    ${item.isActive ? "Desactivar" : "Activar"}
                 </button>
             </div></td>` : ""}
         </tr>
     `).join("");
+    
+    if (!filtered.length) {
+        UI.filaMensaje($("items"), term
+            ? "No hay resultados para esa búsqueda."
+            : `No hay ${isCategory ? "categorías" : "etiquetas"} para mostrar.`);
+    }
 }
 
 async function load() {
     $("catalog-status").textContent = "Cargando…";
+    if (!$("items").children.length) UI.filaMensaje($("items"), "Cargando…", "cargando");
     try {
         items = await App.api(endpoint);
     } catch (error) {
         $("catalog-status").textContent = "No se pudo cargar el listado.";
+        UI.filaMensaje($("items"), "No se pudo cargar el listado.", "error", () => run("catalog-error", load));
         showError("catalog-error", error.message);
         return;
     }
@@ -75,33 +83,54 @@ function openEditor(item = null) {
     $("name").value = item?.name || "";
     if (isCategory) $("description").value = item?.description || "";
     showError("editor-error");
+    Validar.limpiar($("editor"));
     $("editor").hidden = false;
     $("name").focus();
 }
 
 async function save() {
-    const name = $("name").value.trim();
-    if (!name) throw new Error("El nombre es obligatorio.");
+    const R = Validar.reglas;
+    const campos = [{
+        campo: "name",
+        reglas: [R.obligatorio("El nombre es obligatorio."), R.maximo(isCategory ? 100 : 50)]
+    }];
+    if (isCategory) campos.push({ campo: "description", reglas: [R.maximo(500)] });
+    if (!Validar.revisar(campos)) return;
 
+    const name = $("name").value.trim();
     const body = { name };
     if (isCategory) body.description = $("description").value.trim();
     $("editor").inert = true;
+    UI.ocupado($("save"), true, "Guardando…");
     try {
         await App.api(editing ? `${endpoint}/${editing.id}` : endpoint, {
             method: editing ? "PUT" : "POST", body
         });
         $("editor").hidden = true;
         showError("catalog-error");
+        UI.aviso(`${isCategory ? "Categoría" : "Etiqueta"} ${editing ? "actualizada" : "creada"}.`);
         await load();
+    } catch (error) {
+        // 409: ya existe un elemento con ese nombre en la empresa.
+        if (error.status !== 409) throw error;
+        $("editor").inert = false;
+        Validar.mostrar($("name"), error.message);
+        $("name").focus();
     } finally {
         $("editor").inert = false;
+        UI.ocupado($("save"), false);
     }
 }
 
 async function toggle(item) {
     if (item.isActive) {
-        const confirmed = confirm(`¿Desactivar «${item.name}»? Se conservará en los recursos donde ya se usa.`);
-        if (!confirmed) return;
+        const confirmado = await UI.confirmar({
+            titulo: `Desactivar ${noun}`,
+            mensaje: `¿Desactivar «${item.name}»? Se conservará en los recursos donde ya se usa.`,
+            aceptar: "Desactivar",
+            peligro: true
+        });
+        if (!confirmado) return;
     }
 
     const path = `${endpoint}/${item.id}`;
@@ -112,6 +141,7 @@ async function toggle(item) {
         if (isCategory) body.description = item.description;
         await App.api(path, { method: "PUT", body });
     }
+    UI.aviso(`${isCategory ? "Categoría" : "Etiqueta"} ${item.isActive ? "desactivada" : "activada"}.`);
     await load();
 }
 

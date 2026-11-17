@@ -1,0 +1,267 @@
+/* Estilos de la capa de interfaz del panel: errores por campo, confirmación, estados de carga y móvil.
+   Va después de manage.css para ampliar sus reglas sin modificarlas. */
+
+/* Un elemento con el atributo hidden nunca debe mostrarse, aunque otra regla le ponga display
+   (por ejemplo .btn { display: inline-block }). Evita botones de gestión visibles para roles sin permiso. */
+[hidden] {
+    display: none !important;
+}
+
+/* Errores por campo */
+.field input[aria-invalid="true"],
+.field select[aria-invalid="true"],
+.field textarea[aria-invalid="true"] {
+    border-color: #c0392b;
+    background: #fffafa;
+}
+
+.field input[aria-invalid="true"]:focus,
+.field select[aria-invalid="true"]:focus,
+.field textarea[aria-invalid="true"]:focus {
+    outline-color: #c0392b;
+}
+
+.field-error {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.4;
+    color: #c0392b;
+}
+
+/* Botones: peligro sólido y estado ocupado */
+.btn-danger-solid {
+    background: #c0392b;
+    border-color: #c0392b;
+    color: #fff;
+}
+
+.btn-danger-solid:hover {
+    background: #a52f23;
+    border-color: #a52f23;
+}
+
+.btn.is-loading {
+    cursor: progress;
+}
+
+.btn.is-loading::before,
+.spinner {
+    content: "";
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    margin-right: 8px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    vertical-align: -2px;
+    animation: ui-giro 0.7s linear infinite;
+}
+
+@keyframes ui-giro {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Estados de tabla: cargando, vacío y error */
+.estado-celda {
+    padding: 28px 14px !important;
+    text-align: center !important;
+    color: var(--muted) !important;
+}
+
+.estado-celda.is-error {
+    color: #c0392b !important;
+}
+
+.estado-celda .btn {
+    margin-left: 8px;
+}
+
+/* Diálogo de confirmación */
+.confirm-dialog {
+    width: min(440px, calc(100vw - 32px));
+    padding: 0;
+    border: 0;
+    border-radius: 12px;
+    background: var(--white);
+    color: var(--text);
+    box-shadow: 0 24px 60px rgb(6 40 61 / 30%);
+}
+
+.confirm-dialog::backdrop {
+    background: rgb(6 40 61 / 45%);
+}
+
+.confirm-body {
+    padding: 24px;
+}
+
+.confirm-body h2 {
+    font-size: 18px;
+}
+
+.confirm-body p {
+    margin-top: 10px;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+}
+
+.confirm-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 22px;
+}
+
+/* Pantallas pequeñas */
+@media (max-width: 640px) {
+    .page-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .page-header > .btn,
+    .toolbar,
+    .toolbar .btn {
+        width: 100%;
+    }
+
+    .toolbar .btn,
+    .page-header > .btn {
+        text-align: center;
+    }
+
+    .form-actions {
+        flex-wrap: wrap;
+    }
+
+    .form-actions .btn {
+        flex: 1 1 100%;
+        text-align: center;
+    }
+
+    .btn {
+        min-height: 44px;
+    }
+
+    .btn-sm {
+        min-height: 40px;
+    }
+
+    .confirm-actions {
+        flex-direction: column-reverse;
+    }
+
+    .confirm-actions .btn {
+        width: 100%;
+    }
+
+    /* Cada fila de la tabla pasa a ser una tarjeta con «ETIQUETA  valor». */
+    .table-wrap {
+        overflow-x: visible;
+    }
+
+    .table,
+    .table tbody,
+    .table tr,
+    .table td {
+        display: block;
+        width: 100%;
+    }
+
+    .table {
+        min-width: 0;
+    }
+
+    .table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+    }
+
+    .table tr {
+        margin-bottom: 12px;
+        padding: 6px 14px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--white);
+    }
+
+    .table td {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 9px 0;
+        border-bottom: 1px solid var(--surface);
+        text-align: right;
+        overflow-wrap: anywhere;
+    }
+
+    .table tr td:last-child {
+        border-bottom: 0;
+    }
+
+    .table td::before {
+        content: attr(data-label);
+        flex: 0 0 auto;
+        min-width: 34%;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        text-align: left;
+        text-transform: uppercase;
+        white-space: nowrap;
+        overflow-wrap: normal;
+        color: var(--muted);
+    }
+
+    /* Acciones: la etiqueta arriba y los botones en una fila que ocupa todo el ancho. */
+    .table td.celda-acciones {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: left;
+    }
+
+    .table td.celda-acciones .row-actions {
+        justify-content: flex-start;
+    }
+
+    .table td.celda-acciones .btn {
+        flex: 1 1 auto;
+        text-align: center;
+    }
+
+    .card {
+        padding: 18px;
+    }
+
+    .table td:not([data-label])::before {
+        content: none;
+    }
+
+    .table tr.estado-fila {
+        padding: 0;
+        border-style: dashed;
+    }
+
+    .table td.estado-celda {
+        display: block;
+        text-align: center !important;
+    }
+
+    .table td.estado-celda::before {
+        content: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .btn.is-loading::before,
+    .spinner {
+        animation-duration: 2.4s;
+    }
+}

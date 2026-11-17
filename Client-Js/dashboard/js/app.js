@@ -118,7 +118,7 @@ function currentPage() {
 }
 
 async function api(path, options = {}) {
-    const { body, asBlob, ...request } = options;
+    const { body, asBlob, omitirSesionVencida, ...request } = options;
     const token = getToken();
     const headers = { ...request.headers };
     let payload = body;
@@ -137,7 +137,7 @@ async function api(path, options = {}) {
         throw new Error("No se pudo conectar con la API. Intenta de nuevo.");
     }
 
-    if (response.status === 401) {
+    if (response.status === 401 && !omitirSesionVencida) {
         manejarSesionVencida();
 
         const error = new Error(

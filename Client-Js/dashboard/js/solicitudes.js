@@ -73,7 +73,7 @@ async function cargarSolicitudes() {
     const vacio = document.getElementById("vacio-solicitudes");
     const subtitulo = document.getElementById("list-subtitle");
 
-    cuerpo.innerHTML = "";
+    UI.filaMensaje(cuerpo, "Cargando solicitudes…", "cargando");
     vacio.hidden = true;
 
     let solicitudes;
@@ -81,8 +81,10 @@ async function cargarSolicitudes() {
         solicitudes = await App.api("/api/users/requests");
     } catch (err) {
         subtitulo.textContent = "No se pudieron cargar las solicitudes.";
+        UI.filaMensaje(cuerpo, `${err.message}`, "error", cargarSolicitudes);
         return;
     }
+    cuerpo.innerHTML = "";
 
     subtitulo.textContent = usuarioActual.role === "AdminEmpresa"
         ? `${solicitudes.filter((s) => s.status === "Pending").length} pendiente(s) de ${solicitudes.length} solicitud(es).`
@@ -125,13 +127,14 @@ async function cargarSolicitudes() {
     cuerpo.querySelectorAll("[data-accion]").forEach((btn) => {
         btn.addEventListener("click", () => {
             const id = Number(btn.dataset.id);
-            if (btn.dataset.accion === "aprobar") aprobar(id);
-            else rechazar(id);
+            if (btn.dataset.accion === "aprobar") aprobar(id, btn);
+            else rechazar(id, btn);
         });
     });
 }
 
 function abrirFormulario() {
+    Validar.limpiar(document.getElementById("card-form"));
     document.getElementById("f-nombre").value = "";
     document.getElementById("f-email").value = "";
     document.getElementById("form-message").hidden = true;
@@ -147,48 +150,78 @@ function mostrarMensaje(texto, esError) {
 }
 
 async function enviarSolicitud() {
-    const deptoId = Number(document.getElementById("f-departamento").value);
-    if (!deptoId) {
-        mostrarMensaje("Selecciona un departamento.", true);
-        return;
-    }
+    const R = Validar.reglas;
+    document.getElementById("form-message").hidden = true;
+
+    const valido = Validar.revisar([
+        { campo: "f-nombre", reglas: [R.obligatorio("El nombre completo es obligatorio.")] },
+        { campo: "f-email", reglas: [R.obligatorio("El correo es obligatorio."), R.correo()] },
+        { campo: "f-departamento", reglas: [R.obligatorio("Selecciona un departamento.")] }
+    ]);
+    if (!valido) return;
 
     const body = {
         fullName: document.getElementById("f-nombre").value.trim(),
         email: document.getElementById("f-email").value.trim(),
-        departmentId: deptoId
+        departmentId: Number(document.getElementById("f-departamento").value)
     };
+
+    const boton = document.getElementById("btn-enviar");
+    UI.ocupado(boton, true, "Enviando…");
 
     try {
         await App.api("/api/users/requests", { method: "POST", body });
         document.getElementById("card-form").hidden = true;
+        UI.aviso("Solicitud enviada. Queda pendiente de aprobación.");
         await cargarSolicitudes();
     } catch (err) {
-        mostrarMensaje(err.message, true);
+        const camposApi = { email: "f-email", fullname: "f-nombre", departmentid: "f-departamento" };
+        if (!Validar.errorDeServidor(err, camposApi)) mostrarMensaje(err.message, true);
+    } finally {
+        UI.ocupado(boton, false);
     }
 }
 
-async function aprobar(id) {
-    if (!confirm("¿Aprobar esta solicitud? Se creará el usuario y se generará una contraseña temporal.")) return;
+async function aprobar(id, boton) {
+    const confirmado = await UI.confirmar({
+        titulo: "Aprobar solicitud",
+        mensaje: "Se creará el usuario y se generará una contraseña temporal.",
+        aceptar: "Aprobar"
+    });
+    if (!confirmado) return;
 
+    UI.ocupado(boton, true, "Aprobando…");
     try {
         const aprobada = await App.api(`/api/users/requests/${id}/approve`, { method: "POST" });
         document.getElementById("temp-password").textContent = aprobada.temporaryPassword;
         document.getElementById("card-temp").hidden = false;
         document.getElementById("card-temp").scrollIntoView({ behavior: "smooth" });
+        UI.aviso("Solicitud aprobada. Usuario creado.");
         await cargarSolicitudes();
     } catch (err) {
-        alert(err.message);
+        UI.aviso(err.message, "error");
+    } finally {
+        UI.ocupado(boton, false);
     }
 }
 
-async function rechazar(id) {
-    if (!confirm("¿Rechazar esta solicitud?")) return;
+async function rechazar(id, boton) {
+    const confirmado = await UI.confirmar({
+        titulo: "Rechazar solicitud",
+        mensaje: "La solicitud quedará rechazada y no se creará el usuario.",
+        aceptar: "Rechazar",
+        peligro: true
+    });
+    if (!confirmado) return;
 
+    UI.ocupado(boton, true, "Rechazando…");
     try {
         await App.api(`/api/users/requests/${id}/reject`, { method: "POST" });
+        UI.aviso("Solicitud rechazada.");
         await cargarSolicitudes();
     } catch (err) {
-        alert(err.message);
+        UI.aviso(err.message, "error");
+    } finally {
+        UI.ocupado(boton, false);
     }
 }

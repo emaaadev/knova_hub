@@ -6,7 +6,10 @@
     <title>Categorías — Knova Hub</title>
     <link rel="stylesheet" href="./css/dashboard.css">
     <link rel="stylesheet" href="./css/manage.css">
+    <link rel="stylesheet" href="./css/ui.css">
     <script src="./js/app.js" defer></script>
+    <script src="./js/ui.js" defer></script>
+    <script src="./js/validacion.js" defer></script>
     <script src="./js/catalogos.js" defer></script>
 </head>
 <body data-catalog="categories">
@@ -62,7 +65,7 @@
                 </section>
                 <section class="card" id="editor" hidden>
                     <h2 id="editor-title"></h2>
-                    <form id="editor-form">
+                    <form id="editor-form" novalidate>
                         <div class="form-grid">
                             <label class="field">Nombre <input id="name" maxlength="100" required></label>
                             <label class="field">Descripción <textarea id="description" rows="3" maxlength="500"></textarea></label>
