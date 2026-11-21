@@ -31,6 +31,7 @@ async function init() {
         document.getElementById("card-form").hidden = true;
     });
     document.getElementById("btn-enviar").addEventListener("click", enviarSolicitud);
+    configurarCopiaContrasena();
     document.getElementById("btn-temp-ok").addEventListener("click", () => {
         document.getElementById("card-temp").hidden = true;
         cargarSolicitudes();

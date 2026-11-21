@@ -29,6 +29,7 @@ async function init() {
     document.getElementById("btn-nuevo").addEventListener("click", () => abrirFormulario("create"));
     document.getElementById("btn-cancelar").addEventListener("click", cerrarFormulario);
     document.getElementById("btn-guardar").addEventListener("click", guardar);
+    configurarCopiaContrasena();
     document.getElementById("btn-temp-ok").addEventListener("click", () => {
         document.getElementById("card-temp").hidden = true;
         cargarUsuarios();
