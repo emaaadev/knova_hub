@@ -13,6 +13,7 @@
     <script src="./js/app.js" defer></script>
     <script src="./js/ui.js" defer></script>
     <script src="./js/validacion.js" defer></script>
+    <script src="./js/copiar-contrasena.js" defer></script>
     <script src="./js/solicitudes.js" defer></script>
 </head>
 
@@ -116,6 +117,7 @@
                     <p>Se creó el usuario con esta contraseña temporal. Compártela con el empleado para su primer inicio de sesión.</p>
                     <div class="temp-password-box">
                         <code id="temp-password"></code>
+                        <button type="button" class="temp-copy-button" id="btn-copy-temp" title="Copiar contraseña" aria-label="Copiar contraseña"><span class="temp-copy-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="4" width="13" height="16" rx="2" /><path d="M16 4V3a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h3" /></svg></span><span class="temp-copy-label">Copiar</span></button>
                     </div>
                     <div class="form-actions">
                         <button type="button" class="btn" id="btn-temp-ok">Entendido</button>

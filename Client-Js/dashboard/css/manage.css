@@ -7,10 +7,10 @@
     gap: 16px;
 }
 
-.page-header h1 {
-    font-size: clamp(20px, 2.5vw, 26px);
-    letter-spacing: -0.4px;
-}
+    .page-header h1 {
+        font-size: clamp(20px, 2.5vw, 26px);
+        letter-spacing: -0.4px;
+    }
 
 .page-subtitle {
     margin-top: 4px;
@@ -41,9 +41,9 @@
     transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
-.btn:hover {
-    background: var(--surface);
-}
+    .btn:hover {
+        background: var(--surface);
+    }
 
 .btn-primary {
     background: var(--focus);
@@ -51,19 +51,19 @@
     color: var(--white);
 }
 
-.btn-primary:hover {
-    background: #00665a;
-    border-color: #00665a;
-}
+    .btn-primary:hover {
+        background: #00665a;
+        border-color: #00665a;
+    }
 
 .btn-danger {
     color: #c0392b;
     border-color: #f1d3cf;
 }
 
-.btn-danger:hover {
-    background: #fdf0ef;
-}
+    .btn-danger:hover {
+        background: #fdf0ef;
+    }
 
 .btn:disabled {
     opacity: 0.5;
@@ -95,32 +95,32 @@
     font-size: 14px;
 }
 
-.table th,
-.table td {
-    text-align: left;
-    padding: 12px 14px;
-    border-bottom: 1px solid var(--border);
-    vertical-align: middle;
-}
+    .table th,
+    .table td {
+        text-align: left;
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+    }
 
-.table th {
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--muted);
-    white-space: nowrap;
-}
+    .table th {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+        white-space: nowrap;
+    }
 
-.table td {
-    color: var(--heading);
-}
+    .table td {
+        color: var(--heading);
+    }
 
-.table .row-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-}
+    .table .row-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
 
 /* Badges */
 .badge {
@@ -166,39 +166,39 @@
     gap: 6px;
 }
 
-.field label {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--heading);
-}
+    .field label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--heading);
+    }
 
-.field label .req {
-    color: #c0392b;
-}
+        .field label .req {
+            color: #c0392b;
+        }
 
-.field input,
-.field select,
-.field textarea {
-    padding: 10px 12px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    font: inherit;
-    font-size: 14px;
-    color: var(--heading);
-    background: var(--white);
-    width: 100%;
-}
+    .field input,
+    .field select,
+    .field textarea {
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font: inherit;
+        font-size: 14px;
+        color: var(--heading);
+        background: var(--white);
+        width: 100%;
+    }
 
-.field input:focus,
-.field select:focus,
-.field textarea:focus {
-    outline: 2px solid var(--focus);
-    outline-offset: -1px;
-}
+        .field input:focus,
+        .field select:focus,
+        .field textarea:focus {
+            outline: 2px solid var(--focus);
+            outline-offset: -1px;
+        }
 
-.field input.has-error {
-    border-color: #c0392b;
-}
+        .field input.has-error {
+            border-color: #c0392b;
+        }
 
 .field-error {
     font-size: 12px;
@@ -212,15 +212,15 @@
     font-size: 14px;
 }
 
-.form-message.is-error {
-    background: #fdecea;
-    color: #c0392b;
-}
+    .form-message.is-error {
+        background: #fdecea;
+        color: #c0392b;
+    }
 
-.form-message.is-success {
-    background: rgb(1 200 176 / 12%);
-    color: var(--focus);
-}
+    .form-message.is-success {
+        background: rgb(1 200 176 / 12%);
+        color: var(--focus);
+    }
 
 .form-actions {
     display: flex;
@@ -230,6 +230,11 @@
 
 /* Texto temporal de contraseña (cuadro resaltado) */
 .temp-password-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-width: 0;
     margin-top: 16px;
     padding: 16px;
     border: 1px dashed var(--brand);
@@ -237,12 +242,65 @@
     background: rgb(1 200 176 / 8%);
 }
 
-.temp-password-box code {
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
+    .temp-password-box code {
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        color: var(--focus);
+        word-break: break-all;
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+.temp-copy-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex-shrink: 0;
+    padding: 9px 12px;
+    border: 1px solid var(--brand);
+    border-radius: 7px;
+    background: transparent;
     color: var(--focus);
-    word-break: break-all;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+    .temp-copy-button:hover {
+        background: rgb(1 200 176 / 14%);
+    }
+
+    .temp-copy-button:focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: 2px;
+    }
+
+    .temp-copy-button svg {
+        display: block;
+    }
+
+    .temp-copy-button[data-state="copied"] {
+        color: var(--focus);
+        background: rgb(1 200 176 / 18%);
+    }
+
+    .temp-copy-button[data-state="error"] {
+        color: #a62929;
+        border-color: #a62929;
+    }
+
+@media (max-width: 420px) {
+    .temp-password-box {
+        flex-wrap: wrap;
+    }
+
+    .temp-copy-button {
+        margin-left: auto;
+    }
 }
 
 .empty-state {
@@ -287,9 +345,9 @@
     animation: toastEntrada 0.35s ease forwards;
 }
 
-.toast.error {
-    border-left-color: #dc2626;
-}
+    .toast.error {
+        border-left-color: #dc2626;
+    }
 
 .toast-icono {
     display: flex;
