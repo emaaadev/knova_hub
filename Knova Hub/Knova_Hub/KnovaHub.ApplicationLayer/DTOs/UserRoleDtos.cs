@@ -15,7 +15,7 @@ public class ChangeRoleDto
 {
     public int RoleId { get; set; }
 
-    /// <summary>Obligatorio cuando el nuevo rol es Usuario; se ignora para los demás roles.</summary>
+    /// <summary>Obligatorio para Usuario, opcional para AdminEmpresa. Las asignaciones de Supervisor se gestionan aparte.</summary>
     public int? DepartmentId { get; set; }
 }
 

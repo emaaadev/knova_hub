@@ -102,8 +102,9 @@
                             </select>
                         </div>
                         <div class="field" id="campo-departamento">
-                            <label for="f-departamento">Departamento <span class="req">*</span></label>
-                            <select id="f-departamento"></select>
+                            <label for="f-departamento">Departamento <span id="departamento-requerido" class="req">*</span></label>
+                            <select id="f-departamento" aria-describedby="departamento-ayuda"></select>
+                            <small id="departamento-ayuda" hidden>Para seleccionar varios departamentos, mantén pulsado Ctrl (Cmd en Mac).</small>
                         </div>
                     </div>
 

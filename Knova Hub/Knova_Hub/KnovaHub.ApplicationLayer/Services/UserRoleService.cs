@@ -47,16 +47,13 @@ public class UserRoleService : IUserRoleService
         if (user.Id == actor.UserId && dto.RoleId != SystemRoles.AdminEmpresaRoleId)
             throw new BusinessRuleException(MensajeQuitarsePropioRol);
 
-        // Cada Usuario pertenece a un departamento; los demás roles no llevan departamento propio.
-        int? departmentId = null;
-        if (dto.RoleId == SystemRoles.UsuarioRoleId)
-        {
-            if (dto.DepartmentId is not int id)
-                throw new DataValidationException("Para el rol Usuario hay que indicar el departamento.");
+        // Las asignaciones de supervisión se gestionan por separado.
+        var departmentId = dto.RoleId == SystemRoles.SupervisorRoleId ? null : dto.DepartmentId;
+        if (dto.RoleId == SystemRoles.UsuarioRoleId && departmentId is null)
+            throw new DataValidationException("Para el rol Usuario hay que indicar el departamento.");
 
+        if (departmentId is int id && (user.RoleId != dto.RoleId || user.DepartmentId != id))
             await EnsureActiveDepartmentAsync(companyId, id);
-            departmentId = id;
-        }
 
         var guardado = await _users.ChangeRoleKeepingCompanyAdminAsync(companyId, userId, dto.RoleId, departmentId);
         if (!guardado)

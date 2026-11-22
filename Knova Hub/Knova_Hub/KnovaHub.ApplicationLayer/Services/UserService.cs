@@ -68,15 +68,7 @@ public class UserService : IUserService
         if (await _users.EmailExistsAsync(email))
             throw new DuplicateEntityException("email", "Ese correo ya está registrado.");
 
-        int? departmentId = null;
-        if (dto.RoleId == SystemRoles.UsuarioRoleId)
-        {
-            if (dto.DepartmentId is not int id)
-                throw new DataValidationException("Para el rol Usuario hay que indicar el departamento.");
-
-            await EnsureActiveDepartmentAsync(companyId, id);
-            departmentId = id;
-        }
+        var department = await ResolveDepartmentAsync(companyId, dto.RoleId, dto.DepartmentId);
 
         var temporaryPassword = PasswordPolicy.GenerateTemporary();
 
@@ -86,11 +78,15 @@ public class UserService : IUserService
             FullName = fullName,
             Email = email,
             RoleId = dto.RoleId,
-            DepartmentId = departmentId,
+            DepartmentId = dto.RoleId == SystemRoles.SupervisorRoleId ? null : department?.Id,
+            Department = dto.RoleId == SystemRoles.SupervisorRoleId ? null : department,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(temporaryPassword),
             IsActive = true,
             MustChangePassword = true
         };
+
+        if (dto.RoleId == SystemRoles.SupervisorRoleId && department is not null)
+            user.SupervisedDepartments.Add(new SupervisorDepartment { DepartmentId = department.Id, Department = department });
 
         var created = await _users.AddAsync(user);
 
@@ -112,6 +108,30 @@ public class UserService : IUserService
 
         user.FullName = ValidFullName(dto.FullName);
         user.Email = email;
+
+        if (user.RoleId == SystemRoles.SupervisorRoleId && dto.SupervisedDepartmentIds is not null)
+        {
+            var ids = dto.SupervisedDepartmentIds.ToHashSet();
+            var actuales = user.SupervisedDepartments.Select(d => d.DepartmentId).ToHashSet();
+            var nuevos = new List<SupervisorDepartment>();
+
+            foreach (var id in ids.Except(actuales))
+            {
+                var department = await ResolveDepartmentAsync(companyId, user.RoleId, id);
+                nuevos.Add(new SupervisorDepartment { DepartmentId = id, Department = department });
+            }
+
+            foreach (var asignacion in user.SupervisedDepartments.Where(d => !ids.Contains(d.DepartmentId)).ToList())
+                user.SupervisedDepartments.Remove(asignacion);
+
+            foreach (var asignacion in nuevos)
+                user.SupervisedDepartments.Add(asignacion);
+        }
+        else if (user.RoleId != SystemRoles.SupervisorRoleId && dto.HasDepartmentId && dto.DepartmentId != user.DepartmentId)
+        {
+            user.Department = await ResolveDepartmentAsync(companyId, user.RoleId, dto.DepartmentId);
+            user.DepartmentId = user.Department?.Id;
+        }
 
         await _users.UpdateAsync(user);
         return ToDto(user);
@@ -155,11 +175,21 @@ public class UserService : IUserService
         return await _departments.IsSupervisorOfAsync(supervisorId, departmentId);
     }
 
-    private async Task EnsureActiveDepartmentAsync(int companyId, int departmentId)
+    private async Task<Department?> ResolveDepartmentAsync(int companyId, int roleId, int? departmentId)
     {
-        var department = await _departments.GetByIdAsync(companyId, departmentId);
+        if (departmentId is not int id)
+        {
+            if (roleId == SystemRoles.UsuarioRoleId)
+                throw new DataValidationException("Para el rol Usuario hay que indicar el departamento.");
+
+            return null;
+        }
+
+        var department = await _departments.GetByIdAsync(companyId, id);
         if (department is null || !department.IsActive)
             throw new DataValidationException("El departamento no existe en tu empresa o está inactivo.");
+
+        return department;
     }
 
     private static string ValidFullName(string? name)
@@ -180,15 +210,25 @@ public class UserService : IUserService
         return value;
     }
 
-    private static UserDto ToDto(User u) => new()
+    private static UserDto ToDto(User u)
     {
-        Id = u.Id,
-        FullName = u.FullName,
-        Email = u.Email,
-        IsActive = u.IsActive,
-        RoleId = u.RoleId,
-        Role = u.Role?.Name ?? NombresDeRol.GetValueOrDefault(u.RoleId, string.Empty),
-        DepartmentId = u.DepartmentId,
-        DepartmentName = u.Department?.Name
-    };
+        var supervisados = u.SupervisedDepartments
+            .Where(d => d.Department?.CompanyId == u.CompanyId && d.Department is not null)
+            .OrderBy(d => d.Department!.Name)
+            .ToList();
+        var nombre = u.Department?.CompanyId == u.CompanyId ? u.Department?.Name : null;
+
+        return new UserDto
+        {
+            Id = u.Id,
+            FullName = u.FullName,
+            Email = u.Email,
+            IsActive = u.IsActive,
+            RoleId = u.RoleId,
+            Role = u.Role?.Name ?? NombresDeRol.GetValueOrDefault(u.RoleId, string.Empty),
+            DepartmentId = u.DepartmentId,
+            DepartmentName = supervisados.Count == 0 ? nombre : string.Join(", ", supervisados.Select(d => d.Department!.Name)),
+            SupervisedDepartmentIds = supervisados.Select(d => d.DepartmentId).ToArray()
+        };
+    }
 }

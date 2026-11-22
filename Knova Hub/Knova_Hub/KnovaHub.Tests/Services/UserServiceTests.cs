@@ -177,9 +177,63 @@ public class UserServiceTests
     {
         _users.Setup(u => u.EmailExistsAsync("ana@empresa.com")).ReturnsAsync(false);
 
-        var r = await _service.CreateAsync(Empresa, AltaValida(roleId: SystemRoles.SupervisorRoleId));
+        var r = await _service.CreateAsync(Empresa, AltaValida(roleId: SystemRoles.SupervisorRoleId, departmentId: null));
 
         Assert.That(r.User.DepartmentId, Is.Null);
+    }
+
+    [TestCase(SystemRoles.SupervisorRoleId)]
+    [TestCase(SystemRoles.AdminEmpresaRoleId)]
+    public async Task Create_ConDepartamento_DevuelveSuNombre(int roleId)
+    {
+        var result = await _service.CreateAsync(Empresa, AltaValida(roleId));
+
+        Assert.That(result.User.DepartmentName, Is.EqualTo("Ventas"));
+        if (roleId == SystemRoles.SupervisorRoleId)
+            Assert.That(result.User.SupervisedDepartmentIds, Is.EqualTo(new[] { DeptoVentas }));
+        else
+            Assert.That(result.User.DepartmentId, Is.EqualTo(DeptoVentas));
+    }
+
+    [Test]
+    public async Task GetVisible_DevuelveDepartamentosSupervisadosYNuloParaAdminSinDepartamento()
+    {
+        var supervisor = TestData.UsuarioDeEmpresa(SupervisorId, SystemRoles.SupervisorRoleId, companyId: Empresa);
+        supervisor.SupervisedDepartments.Add(new SupervisorDepartment
+        {
+            DepartmentId = DeptoVentas,
+            Department = new Department { Id = DeptoVentas, CompanyId = Empresa, Name = "Ventas" }
+        });
+        supervisor.SupervisedDepartments.Add(new SupervisorDepartment
+        {
+            DepartmentId = DeptoSoporte,
+            Department = new Department { Id = DeptoSoporte, CompanyId = Empresa, Name = "Soporte" }
+        });
+        var admin = TestData.UsuarioDeEmpresa(AdminId, SystemRoles.AdminEmpresaRoleId, companyId: Empresa);
+        _users.Setup(u => u.GetByCompanyAsync(Empresa)).ReturnsAsync(new List<User> { supervisor, admin });
+
+        var results = await _service.GetVisibleAsync(Admin);
+
+        Assert.That(results[0].DepartmentName, Is.EqualTo("Soporte, Ventas"));
+        Assert.That(results[1].DepartmentName, Is.Null);
+    }
+
+    [Test]
+    public async Task Update_Supervisor_ReemplazaLasAsignaciones()
+    {
+        var supervisor = TestData.UsuarioDeEmpresa(SupervisorId, SystemRoles.SupervisorRoleId, companyId: Empresa);
+        supervisor.SupervisedDepartments.Add(new SupervisorDepartment { DepartmentId = DeptoSoporte });
+        _users.Setup(u => u.GetByIdInCompanyAsync(Empresa, SupervisorId)).ReturnsAsync(supervisor);
+
+        var result = await _service.UpdateAsync(Empresa, SupervisorId, new UpdateUserDto
+        {
+            FullName = supervisor.FullName,
+            Email = supervisor.Email,
+            SupervisedDepartmentIds = new List<int> { DeptoVentas }
+        });
+
+        Assert.That(result.SupervisedDepartmentIds, Is.EqualTo(new[] { DeptoVentas }));
+        Assert.That(result.DepartmentName, Is.EqualTo("Ventas"));
     }
 
     // ---------- Actualizar ----------

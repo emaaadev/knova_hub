@@ -81,6 +81,7 @@ public class UserRepository : IUserRepository
         return _context.Users
             .Include(u => u.Role)
             .Include(u => u.Department)
+            .Include(u => u.SupervisedDepartments).ThenInclude(d => d.Department)
             .FirstOrDefaultAsync(u => u.Id == userId && u.CompanyId == companyId);
     }
 
@@ -145,6 +146,7 @@ public class UserRepository : IUserRepository
             .AsNoTracking()
             .Include(u => u.Role)
             .Include(u => u.Department)
+            .Include(u => u.SupervisedDepartments).ThenInclude(d => d.Department)
             .Where(u => u.CompanyId == companyId)
             .OrderBy(u => u.FullName)
             .ToListAsync();
@@ -156,6 +158,7 @@ public class UserRepository : IUserRepository
             .AsNoTracking()
             .Include(u => u.Role)
             .Include(u => u.Department)
+            .Include(u => u.SupervisedDepartments).ThenInclude(d => d.Department)
             .Where(u => u.DepartmentId != null && departmentIds.Contains(u.DepartmentId.Value))
             .OrderBy(u => u.FullName)
             .ToListAsync();
@@ -171,7 +174,8 @@ public class UserRepository : IUserRepository
 
     public Task UpdateAsync(User user)
     {
-        _context.Users.Update(user);
+        if (_context.Entry(user).State == EntityState.Detached)
+            _context.Users.Update(user);
         return SaveAsync();
     }
 
