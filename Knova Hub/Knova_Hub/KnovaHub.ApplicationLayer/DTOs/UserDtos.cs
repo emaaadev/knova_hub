@@ -10,6 +10,7 @@ public class UserDto
     public string Role { get; set; } = string.Empty;
     public int? DepartmentId { get; set; }
     public string? DepartmentName { get; set; }
+    public IReadOnlyList<int> SupervisedDepartmentIds { get; set; } = Array.Empty<int>();
 }
 
 /// <summary>Resultado de crear un usuario: incluye la contraseña temporal generada.</summary>
@@ -27,12 +28,29 @@ public class CreateUserDto
     public string Email { get; set; } = string.Empty;
     public int RoleId { get; set; }
 
-    /// <summary>Obligatorio cuando el rol es Usuario; se ignora para los demás roles.</summary>
+    /// <summary>Obligatorio para Usuario. Para Supervisor, indica el departamento inicial que supervisa.</summary>
     public int? DepartmentId { get; set; }
 }
 
 public class UpdateUserDto
 {
+    private int? _departmentId;
+
+    public int? DepartmentId
+    {
+        get => _departmentId;
+        set
+        {
+            _departmentId = value;
+            HasDepartmentId = true;
+        }
+    }
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool HasDepartmentId { get; private set; }
+
+    public List<int>? SupervisedDepartmentIds { get; set; }
+
     public string FullName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
 }
