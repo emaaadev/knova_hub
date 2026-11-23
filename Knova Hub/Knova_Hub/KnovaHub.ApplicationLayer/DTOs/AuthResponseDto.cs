@@ -15,6 +15,12 @@ public class AuthResponseDto
     public string Sector { get; set; } = string.Empty;
     public string Activity { get; set; } = string.Empty;
 
+    /// <summary>Teléfono de la empresa (se muestra en "Tu empresa").</summary>
+    public string Phone { get; set; } = string.Empty;
+
+    /// <summary>Dirección física de la empresa (se muestra en "Tu empresa").</summary>
+    public string Address { get; set; } = string.Empty;
+
     /// <summary>True si el usuario debe cambiar su contraseña en su primer inicio de sesión.</summary>
     public bool MustChangePassword { get; set; }
 }

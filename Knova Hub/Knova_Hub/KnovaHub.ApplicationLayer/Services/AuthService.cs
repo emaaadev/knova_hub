@@ -168,6 +168,8 @@ public class AuthService : IAuthService
         var rnc = user.Company?.Rnc ?? string.Empty;
         var sector = user.Company?.Sector ?? string.Empty;
         var activity = user.Company?.Activity ?? string.Empty;
+        var phone = user.Company?.Phone ?? string.Empty;
+        var address = user.Company?.Address ?? string.Empty;
 
         var claims = new List<Claim>
         {
@@ -204,6 +206,8 @@ public class AuthService : IAuthService
             Rnc = rnc,
             Sector = sector,
             Activity = activity,
+            Phone = phone,
+            Address = address,
             MustChangePassword = user.MustChangePassword
         };
     }

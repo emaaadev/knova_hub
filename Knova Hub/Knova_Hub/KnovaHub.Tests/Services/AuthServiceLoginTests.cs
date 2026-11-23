@@ -110,6 +110,8 @@ public class AuthServiceLoginTests
             Assert.That(respuesta.CompanyId, Is.EqualTo(5));
             Assert.That(respuesta.Role, Is.EqualTo(SystemRoles.AdminEmpresaRoleName));
             Assert.That(respuesta.Rnc, Is.EqualTo("131234567"));
+            Assert.That(respuesta.Phone, Is.EqualTo("809-555-1234"));
+            Assert.That(respuesta.Address, Is.EqualTo("Av. Principal #1, Santo Domingo"));
         });
         _repo.Verify(r => r.GetByEmailOrRncAsync(identificador), Times.Once);
     }
