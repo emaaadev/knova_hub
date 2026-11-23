@@ -7,21 +7,38 @@ const contentTypes = {
     3: "Minuta"
 };
 
+const COMPANY_NA = "N/A";
+const ADDRESS_MAX_LENGTH = 60;
+
+function displayValue(value) {
+    return (value ?? "").toString().trim() || COMPANY_NA;
+}
+
 function renderCompany(user) {
     $("greeting").textContent = `Hola, ${user.fullName || "usuario"}`;
     $("welcome-company").textContent = user.companyName || "";
     $("welcome-rnc").textContent = user.rnc || "";
 
-    const fields = {
-        name: user.companyName,
-        rnc: user.rnc,
-        email: user.email,
-        phone: user.phone,
-        address: user.address
-    };
+    // Nombre, RNC y correo son obligatorios al registrar la empresa.
+    $("company-name").textContent = user.companyName || "—";
+    $("company-rnc").textContent = user.rnc || "—";
+    $("company-email").textContent = user.email || "—";
 
-    for (const [field, value] of Object.entries(fields)) {
-        $(`company-${field}`).textContent = value || "—";
+    // Teléfono y dirección pueden faltar: se muestran como N/A.
+    $("company-phone").textContent = displayValue(user.phone);
+
+    const address = displayValue(user.address);
+    const addressEl = $("company-address");
+
+    if (address === COMPANY_NA) {
+        addressEl.textContent = COMPANY_NA;
+        addressEl.removeAttribute("title");
+    } else if (address.length > ADDRESS_MAX_LENGTH) {
+        addressEl.textContent = address.slice(0, ADDRESS_MAX_LENGTH) + "…";
+        addressEl.title = address;
+    } else {
+        addressEl.textContent = address;
+        addressEl.removeAttribute("title");
     }
 }
 

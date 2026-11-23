@@ -51,6 +51,8 @@ public static class TestData
             Rnc = "131234567",
             Name = "Empresa de Prueba SRL",
             Email = "contacto@empresa.com",
+            Phone = "809-555-1234",
+            Address = "Av. Principal #1, Santo Domingo",
             IsActive = true
         },
         RoleId = SystemRoles.AdminEmpresaRoleId,
