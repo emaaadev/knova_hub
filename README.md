@@ -1,5 +1,7 @@
 # Knova Hub
 
+<img width="598" height="152" alt="imagen" src="https://github.com/user-attachments/assets/17f81667-2ae0-4af8-8791-abe1333b9de9" />
+
 ## ¿Qué es y para qué sirve?
 
 **Knova Hub** es un Sistema Inteligente de Gestión del Conocimiento Empresarial. 
