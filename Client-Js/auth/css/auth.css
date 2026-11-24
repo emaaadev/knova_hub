@@ -433,3 +433,26 @@ img {
         transition: none;
     }
 }
+
+.auth-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    max-width: calc(100vw - 40px);
+    padding: 14px 20px;
+    border-radius: 12px;
+    background: #16a34a;
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.18);
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.auth-toast.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}

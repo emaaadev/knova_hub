@@ -49,6 +49,46 @@ function setLoading(button, loading) {
     button.textContent = loading ? "Procesando…" : button.dataset.label;
 }
 
+const TOAST_KEY = "knovaToast";
+const TOAST_DURATION_MS = 5000;
+
+function renderToast(message, remainingMs) {
+    if (remainingMs <= 0) return;
+
+    const toast = document.createElement("div");
+    toast.className = "auth-toast";
+    toast.setAttribute("role", "status");
+    toast.setAttribute("aria-live", "polite");
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    requestAnimationFrame(() => toast.classList.add("is-visible"));
+
+    setTimeout(() => {
+        toast.classList.remove("is-visible");
+        setTimeout(() => toast.remove(), 300);
+    }, remainingMs);
+}
+
+function showSuccessToast(message) {
+    const expiresAt = Date.now() + TOAST_DURATION_MS;
+    sessionStorage.setItem(TOAST_KEY, JSON.stringify({ message, expiresAt }));
+    renderToast(message, TOAST_DURATION_MS);
+}
+
+function restorePendingToast() {
+    const raw = sessionStorage.getItem(TOAST_KEY);
+    if (!raw) return;
+
+    sessionStorage.removeItem(TOAST_KEY);
+    try {
+        const { message, expiresAt } = JSON.parse(raw);
+        renderToast(message, expiresAt - Date.now());
+    } catch { }
+}
+
+restorePendingToast();
+
 const registerForm = document.getElementById("register-form");
 
 if (registerForm) {
@@ -150,7 +190,7 @@ if (registerForm) {
             const data = await response.json();
 
             if (response.ok) {
-                showMessage(registerForm, "Empresa registrada. Redirigiendo al inicio de sesión…", false);
+                showSuccessToast("Cuenta creada exitosamente, ya puede iniciar sesión.");
                 setTimeout(() => (window.location.href = "login.html"), 1500);
             } else if ([400, 409].includes(response.status) && fieldInputs[data.field]) {
                 showError(fieldInputs[data.field], data.message);
