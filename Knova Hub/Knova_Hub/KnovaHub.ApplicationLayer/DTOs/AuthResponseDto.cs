@@ -12,6 +12,7 @@ public class AuthResponseDto
     public int? CompanyId { get; set; }
     public string CompanyName { get; set; } = string.Empty;
     public string Rnc { get; set; } = string.Empty;
+    public string CompanyEmail { get; set; } = string.Empty;
     public string Sector { get; set; } = string.Empty;
     public string Activity { get; set; } = string.Empty;
 

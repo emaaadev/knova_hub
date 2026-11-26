@@ -12,7 +12,14 @@
 
     <link rel="stylesheet" href="./css/dashboard.css">
     <link rel="stylesheet" href="./css/manage.css">
+    <link rel="stylesheet" href="./css/ui.css">
+    <link rel="stylesheet" href="./css/empresa.css">
+    <link rel="stylesheet" href="./css/tema.css">
+    <script src="./js/tema.js"></script>
     <script src="./js/app.js" defer></script>
+    <script src="./js/ui.js" defer></script>
+    <script src="./js/validacion.js" defer></script>
+    <script src="./js/empresa.js" defer></script>
     <script src="./js/dashboard.js" defer></script>
 </head>
 
@@ -56,13 +63,18 @@
                 </section>
 
                 <section class="company-card" aria-label="Datos de la empresa">
-                    <h2>Tu empresa</h2>
+                    <div class="card-header">
+                        <h2>Tu Empresa</h2>
+                        <button type="button" class="btn btn-sm" id="company-edit" hidden>Editar</button>
+                    </div>
                     <dl class="company-fields">
                         <div><dt>Nombre</dt><dd id="company-name"></dd></div>
                         <div><dt>RNC</dt><dd id="company-rnc"></dd></div>
                         <div><dt>Correo</dt><dd id="company-email"></dd></div>
                         <div><dt>Teléfono</dt><dd id="company-phone"></dd></div>
                         <div><dt>Dirección</dt><dd id="company-address"></dd></div>
+                        <div><dt>Sector</dt><dd id="company-sector"></dd></div>
+                        <div><dt>Actividad</dt><dd id="company-activity"></dd></div>
                     </dl>
                 </section>
 
@@ -137,6 +149,67 @@
             </main>
         </div>
     </div>
+
+    <dialog class="confirm-dialog company-dialog" id="company-dialog" aria-labelledby="company-dialog-title">
+        <form class="confirm-body" id="company-form" novalidate>
+            <h2 id="company-dialog-title">Editar datos de la empresa</h2>
+            <p class="page-subtitle">Los cambios se aplican a toda la empresa.</p>
+
+            <div class="form-grid">
+                <div class="field">
+                    <label for="co-name">Nombre de la empresa <span class="req">*</span></label>
+                    <input id="co-name" maxlength="150" autocomplete="organization">
+                </div>
+                <div class="field">
+                    <label for="co-rnc">RNC <span class="req">*</span></label>
+                    <input id="co-rnc" inputmode="numeric" maxlength="11" autocomplete="off">
+                </div>
+                <div class="field">
+                    <label for="co-email">Correo corporativo <span class="req">*</span></label>
+                    <input id="co-email" type="email" maxlength="150" autocomplete="email">
+                </div>
+                <div class="field">
+                    <label for="co-phone">Teléfono <span class="req">*</span></label>
+                    <input id="co-phone" type="tel" maxlength="20" autocomplete="tel">
+                </div>
+                <div class="field field-wide">
+                    <label for="co-address">Dirección <span class="req">*</span></label>
+                    <input id="co-address" maxlength="200" autocomplete="street-address">
+                </div>
+                <div class="field field-wide">
+                    <label for="co-sector">Sector empresarial <span class="req">*</span></label>
+                    <select id="co-sector">
+                        <option value="">Selecciona un sector</option>
+                        <option value="Agricultura y ganadería">Agricultura y ganadería</option>
+                        <option value="Comercio">Comercio</option>
+                        <option value="Construcción e inmobiliaria">Construcción e inmobiliaria</option>
+                        <option value="Educación">Educación</option>
+                        <option value="Energía y servicios públicos">Energía y servicios públicos</option>
+                        <option value="Finanzas y seguros">Finanzas y seguros</option>
+                        <option value="Industria y manufactura">Industria y manufactura</option>
+                        <option value="Salud">Salud</option>
+                        <option value="Tecnología y telecomunicaciones">Tecnología y telecomunicaciones</option>
+                        <option value="Transporte y logística">Transporte y logística</option>
+                        <option value="Turismo, hotelería y gastronomía">Turismo, hotelería y gastronomía</option>
+                        <option value="Servicios profesionales">Servicios profesionales</option>
+                        <option value="Medios y entretenimiento">Medios y entretenimiento</option>
+                        <option value="Otros">Otros</option>
+                    </select>
+                </div>
+                <div class="field field-wide">
+                    <label for="co-activity">Actividad de la empresa <span class="req">*</span></label>
+                    <textarea id="co-activity" rows="3" maxlength="250"></textarea>
+                </div>
+            </div>
+
+            <p class="form-message is-error" id="company-error" role="alert" hidden></p>
+
+            <div class="confirm-actions">
+                <button type="button" class="btn" id="company-cancel">Cancelar</button>
+                <button type="submit" class="btn btn-primary" id="company-save">Guardar cambios</button>
+            </div>
+        </form>
+    </dialog>
 </body>
 
 </html>

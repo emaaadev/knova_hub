@@ -9,9 +9,23 @@ const contentTypes = {
 
 const COMPANY_NA = "N/A";
 const ADDRESS_MAX_LENGTH = 60;
+const ACTIVITY_MAX_LENGTH = 80;
 
 function displayValue(value) {
     return (value ?? "").toString().trim() || COMPANY_NA;
+}
+
+// Muestra el texto recortado (con el completo en el tooltip) si supera el máximo.
+function setTruncated(element, value, max) {
+    const text = displayValue(value);
+
+    if (text !== COMPANY_NA && text.length > max) {
+        element.textContent = text.slice(0, max) + "…";
+        element.title = text;
+    } else {
+        element.textContent = text;
+        element.removeAttribute("title");
+    }
 }
 
 function renderCompany(user) {
@@ -20,26 +34,16 @@ function renderCompany(user) {
     $("welcome-rnc").textContent = user.rnc || "";
 
     // Nombre, RNC y correo son obligatorios al registrar la empresa.
+    // companyEmail es el correo de la empresa; user.email (el del usuario) queda de respaldo.
     $("company-name").textContent = user.companyName || "—";
     $("company-rnc").textContent = user.rnc || "—";
-    $("company-email").textContent = user.email || "—";
+    $("company-email").textContent = user.companyEmail || user.email || "—";
 
-    // Teléfono y dirección pueden faltar: se muestran como N/A.
+    // Teléfono, dirección, sector y actividad pueden faltar: se muestran como N/A.
     $("company-phone").textContent = displayValue(user.phone);
-
-    const address = displayValue(user.address);
-    const addressEl = $("company-address");
-
-    if (address === COMPANY_NA) {
-        addressEl.textContent = COMPANY_NA;
-        addressEl.removeAttribute("title");
-    } else if (address.length > ADDRESS_MAX_LENGTH) {
-        addressEl.textContent = address.slice(0, ADDRESS_MAX_LENGTH) + "…";
-        addressEl.title = address;
-    } else {
-        addressEl.textContent = address;
-        addressEl.removeAttribute("title");
-    }
+    $("company-sector").textContent = displayValue(user.sector);
+    setTruncated($("company-address"), user.address, ADDRESS_MAX_LENGTH);
+    setTruncated($("company-activity"), user.activity, ACTIVITY_MAX_LENGTH);
 }
 
 async function configureQuickActions(role) {
@@ -226,6 +230,7 @@ function setupAi() {
 
 if (session) {
     renderCompany(session.user);
+    Empresa.iniciar(session.user, renderCompany);
     configureQuickActions(session.user.role);
     loadStats();
     loadRecommendations();

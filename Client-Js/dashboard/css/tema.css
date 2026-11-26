@@ -1,0 +1,238 @@
+/* Modo oscuro del panel + botón luna/sol.
+   Va después de dashboard.css, manage.css y ui.css. Todo lo oscuro cuelga de html[data-tema="oscuro"],
+   así que el modo claro no cambia. */
+
+/* Botón luna / sol (se ve igual en ambos modos, usa las variables del tema) */
+.theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--white);
+    color: var(--heading);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.theme-toggle:hover {
+    background: var(--surface);
+}
+
+.theme-toggle:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+@media (max-width: 560px) {
+    /* El botón, el nombre y «Cerrar sesión» caben en una sola fila desde 320 px. */
+    .user-menu {
+        gap: 10px;
+    }
+
+    .user-menu .user-info {
+        flex: 1 1 auto;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .theme-toggle {
+        transition: none;
+    }
+}
+
+/* Variables */
+html[data-tema="oscuro"] {
+    color-scheme: dark;
+    --white: #121f29;      /* fondo de tarjetas, barra lateral y barra superior */
+    --surface: #0b141b;    /* fondo de la página */
+    --heading: #e8f1f5;
+    --text: #b6c4cd;
+    --muted: #8ea0ac;
+    --border: #263642;
+    --brand: #01c8b0;
+    --brand-hover: #00b49e;
+    --focus: #2dd4bf;
+}
+
+/* Logo: respaldo en CSS (tema.js también cambia el src) */
+html[data-tema="oscuro"] .sidebar-logo img {
+    content: url("../../assets/logo-claro.png");
+}
+
+/* Hover: sobre fondos oscuros se aclara en vez de oscurecer */
+html[data-tema="oscuro"] .nav-item:hover,
+html[data-tema="oscuro"] .logout-btn:hover,
+html[data-tema="oscuro"] .btn:hover,
+html[data-tema="oscuro"] .theme-toggle:hover {
+    background: rgb(255 255 255 / 8%);
+}
+
+html[data-tema="oscuro"] .nav-item.is-active {
+    background: rgb(45 212 191 / 16%);
+}
+
+/* Etiqueta del rol */
+html[data-tema="oscuro"] .role-badge {
+    background: rgb(45 212 191 / 14%);
+    border-color: #1f5a54;
+    color: #7ee8da;
+}
+
+/* Botones */
+html[data-tema="oscuro"] .btn-primary {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: #06283d;
+}
+
+html[data-tema="oscuro"] .btn-primary:hover {
+    background: var(--brand-hover);
+    border-color: var(--brand-hover);
+}
+
+html[data-tema="oscuro"] .btn-danger {
+    color: #fca5a5;
+    border-color: #5c2b2b;
+}
+
+html[data-tema="oscuro"] .btn-danger:hover {
+    background: rgb(239 68 68 / 14%);
+}
+
+html[data-tema="oscuro"] .btn-eliminar-categoria {
+    background: #3a1a22;
+    color: #fda4af;
+    border-color: #6b2b38;
+}
+
+html[data-tema="oscuro"] .btn-eliminar-categoria:hover {
+    background: #4a2029;
+    color: #fecdd3;
+}
+
+/* Etiquetas de estado */
+html[data-tema="oscuro"] .badge-warn {
+    background: rgb(245 158 11 / 16%);
+    color: #fbbf24;
+}
+
+html[data-tema="oscuro"] .badge-danger {
+    background: rgb(239 68 68 / 16%);
+    color: #fca5a5;
+}
+
+/* Formularios */
+html[data-tema="oscuro"] .field input::placeholder,
+html[data-tema="oscuro"] .field textarea::placeholder,
+html[data-tema="oscuro"] .ai-form textarea::placeholder {
+    color: var(--muted);
+}
+
+html[data-tema="oscuro"] .ai-form textarea {
+    background: var(--white);
+    color: var(--heading);
+}
+
+html[data-tema="oscuro"] .field .req,
+html[data-tema="oscuro"] .field-error {
+    color: #fca5a5;
+}
+
+html[data-tema="oscuro"] .field input.has-error {
+    border-color: #f87171;
+}
+
+html[data-tema="oscuro"] .field input[aria-invalid="true"],
+html[data-tema="oscuro"] .field select[aria-invalid="true"],
+html[data-tema="oscuro"] .field textarea[aria-invalid="true"] {
+    border-color: #f87171;
+    background: rgb(239 68 68 / 8%);
+}
+
+html[data-tema="oscuro"] .field input[aria-invalid="true"]:focus,
+html[data-tema="oscuro"] .field select[aria-invalid="true"]:focus,
+html[data-tema="oscuro"] .field textarea[aria-invalid="true"]:focus {
+    outline-color: #f87171;
+}
+
+/* Mensajes */
+html[data-tema="oscuro"] .form-message.is-error {
+    background: rgb(239 68 68 / 14%);
+    color: #fca5a5;
+}
+
+html[data-tema="oscuro"] .estado-celda.is-error {
+    color: #fca5a5 !important;
+}
+
+html[data-tema="oscuro"] .ai-limit {
+    background: rgb(245 158 11 / 14%);
+    border-color: #7a5410;
+    color: #fcd34d;
+}
+
+html[data-tema="oscuro"] .temp-copy-button[data-state="error"] {
+    color: #f87171;
+    border-color: #f87171;
+}
+
+/* Diálogo de confirmación (modales) */
+html[data-tema="oscuro"] .confirm-dialog {
+    border: 1px solid var(--border);
+    box-shadow: 0 24px 60px rgb(0 0 0 / 55%);
+}
+
+html[data-tema="oscuro"] .confirm-dialog::backdrop {
+    background: rgb(0 0 0 / 62%);
+}
+
+html[data-tema="oscuro"] .sidebar.is-open {
+    box-shadow: 0 0 40px rgb(0 0 0 / 55%);
+}
+
+/* Notificaciones (toasts) */
+html[data-tema="oscuro"] .toast,
+html[data-tema="oscuro"] .knova-toast {
+    background: var(--white);
+    border-top-color: var(--border);
+    border-right-color: var(--border);
+    border-bottom-color: var(--border);
+    box-shadow: 0 12px 35px rgb(0 0 0 / 55%);
+}
+
+html[data-tema="oscuro"] .toast-titulo,
+html[data-tema="oscuro"] .knova-toast-titulo {
+    color: var(--heading);
+}
+
+html[data-tema="oscuro"] .toast-mensaje,
+html[data-tema="oscuro"] .knova-toast-mensaje {
+    color: var(--text);
+}
+
+html[data-tema="oscuro"] .toast-icono,
+html[data-tema="oscuro"] .knova-toast-icono {
+    background: rgb(34 197 94 / 18%);
+    color: #4ade80;
+}
+
+html[data-tema="oscuro"] .toast.error .toast-icono,
+html[data-tema="oscuro"] .knova-toast.error .knova-toast-icono {
+    background: rgb(239 68 68 / 18%);
+    color: #f87171;
+}
+
+html[data-tema="oscuro"] .toast-cerrar,
+html[data-tema="oscuro"] .knova-toast-cerrar {
+    color: var(--muted);
+}
+
+html[data-tema="oscuro"] .toast-cerrar:hover,
+html[data-tema="oscuro"] .knova-toast-cerrar:hover {
+    color: var(--heading);
+}
