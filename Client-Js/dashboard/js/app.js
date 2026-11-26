@@ -211,6 +211,8 @@ function renderAccount(user) {
         role.hidden = !role.textContent;
     }
     document.getElementById("logout")?.addEventListener("click", logout);
+    document.getElementById("logout")?.addEventListener("click", logout);
+    window.Tema?.montarBoton();
 }
 
 function setupNavigation(page, role, canManage) {
