@@ -166,6 +166,7 @@ public class AuthService : IAuthService
         var role = user.Role?.Name ?? SystemRoles.UsuarioRoleName;
         var companyName = user.Company?.Name ?? string.Empty;
         var rnc = user.Company?.Rnc ?? string.Empty;
+        var companyEmail = user.Company?.Email ?? string.Empty;
         var sector = user.Company?.Sector ?? string.Empty;
         var activity = user.Company?.Activity ?? string.Empty;
         var phone = user.Company?.Phone ?? string.Empty;
@@ -204,6 +205,7 @@ public class AuthService : IAuthService
             CompanyId = user.CompanyId,
             CompanyName = companyName,
             Rnc = rnc,
+            CompanyEmail = companyEmail,
             Sector = sector,
             Activity = activity,
             Phone = phone,

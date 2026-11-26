@@ -1,0 +1,29 @@
+/* Tarjeta «Tu empresa» con botón Editar y ventana de edición. Va después de ui.css. */
+.company-card .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.company-dialog {
+    width: min(560px, calc(100vw - 32px));
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+}
+
+.company-dialog .form-grid {
+    margin-top: 16px;
+}
+
+.company-dialog .field-wide {
+    grid-column: 1 / -1;
+}
+
+.company-dialog textarea {
+    resize: vertical;
+}
+
+.company-dialog .form-message {
+    margin-top: 14px;
+}
