@@ -58,7 +58,8 @@ public interface IDocumentRepository
 public record IndexedDocumentText(
     int DocumentId,
     string Title,
-    string Markdown);
+    string Markdown,
+    int? DepartmentId = null);
 
 public record DocumentSummary(
     int Documents,

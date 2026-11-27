@@ -81,12 +81,17 @@ public class QueryService : IQueryService
 
         var indexedDocuments = await _documents.GetIndexedTextsAsync(companyId, visibleDepartmentIds);
 
+        var isAdmin = actor.Role == SystemRoles.AdminEmpresaRoleName;
+        var isSupervisor = actor.Role == SystemRoles.SupervisorRoleName;
+
         var context = indexedDocuments
             .Select(d => new AiContextChunkDto
             {
                 DocumentId = d.DocumentId,
                 Title = d.Title,
-                Content = d.Markdown
+                Content = d.Markdown,
+                CanReadSensitiveContent = isAdmin || (isSupervisor && d.DepartmentId is int departmentId
+                    && visibleDepartmentIds!.Contains(departmentId))
             })
             .ToList();
 
@@ -95,14 +100,18 @@ public class QueryService : IQueryService
             UserId = actor.UserId,
             CompanyId = companyId,
             Question = question,
-            Context = context
+            Context = context,
+            EnforceSensitiveContentPolicy = !isAdmin,
+            CanRequestSensitiveContent = isAdmin || (isSupervisor && visibleDepartmentIds!.Length > 0)
         };
 
-        string? answer = null;
+        AiAnswerDto? answer = null;
+        var sourceIds = new HashSet<int>();
         try
         {
-            var aiResponse = await _iaServices.AskAsync(request);
-            answer = aiResponse.Answer;
+            answer = await _iaServices.AskAsync(request);
+            sourceIds.UnionWith(answer.SourceDocumentIds ??
+                (isAdmin ? indexedDocuments.Select(d => d.DocumentId) : Enumerable.Empty<int>()));
         }
         finally
         {
@@ -111,7 +120,7 @@ public class QueryService : IQueryService
                 UserId = actor.UserId,
                 CompanyId = companyId,
                 Question = question,
-                DocumentIds = string.Join(",", indexedDocuments.Select(d => d.DocumentId)),
+                DocumentIds = string.Join(",", indexedDocuments.Where(d => sourceIds.Contains(d.DocumentId)).Select(d => d.DocumentId)),
                 AskedAt = DateTime.UtcNow
             };
             await _queryLog.AddAsync(log);
@@ -119,8 +128,8 @@ public class QueryService : IQueryService
 
         return new AiAskResponseDto
         {
-            Answer = answer ?? string.Empty,
-            Sources = indexedDocuments.Select(d => new AiSourceDto
+            Answer = answer?.Answer ?? string.Empty,
+            Sources = indexedDocuments.Where(d => sourceIds.Contains(d.DocumentId)).Select(d => new AiSourceDto
             {
                 DocumentId = d.DocumentId,
                 Title = d.Title

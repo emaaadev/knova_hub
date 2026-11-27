@@ -24,6 +24,7 @@ public class ClaudeAiServiceTests
         private readonly Func<CancellationToken, Task<HttpResponseMessage>> _respond;
 
         public int Calls { get; private set; }
+        public List<string?> Bodies { get; } = new();
         public string? LastBody { get; private set; }
         public string? ApiKeyHeader { get; private set; }
         public string? VersionHeader { get; private set; }
@@ -40,6 +41,7 @@ public class ClaudeAiServiceTests
         {
             Calls++;
             LastBody = request.Content is null ? null : await request.Content.ReadAsStringAsync(ct);
+            Bodies.Add(LastBody);
             ApiKeyHeader = request.Headers.TryGetValues("x-api-key", out var k) ? k.FirstOrDefault() : null;
             VersionHeader = request.Headers.TryGetValues("anthropic-version", out var v) ? v.FirstOrDefault() : null;
             return await _respond(ct);
@@ -114,6 +116,78 @@ public class ClaudeAiServiceTests
         await Crear(handler).AskAsync(Pregunta());
 
         _limiter.Verify(l => l.Acquire(10, 5), Times.Once);
+    }
+
+    private static StubHandler RespondeEnOrden(params string[] respuestas)
+    {
+        var pendientes = new Queue<string>(respuestas);
+        return new StubHandler(_ => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(System.Text.Json.JsonSerializer.Serialize(new
+            {
+                content = new[] { new { type = "text", text = pendientes.Dequeue() } }
+            }))
+        }));
+    }
+
+    private static AiRequestDto ConsultaRestringida(bool supervisor = false) => new()
+    {
+        UserId = 10,
+        CompanyId = 5,
+        Question = "¿Qué debo pegar al entrar al portal?",
+        EnforceSensitiveContentPolicy = true,
+        CanRequestSensitiveContent = supervisor,
+        Context = new()
+        {
+            new() { DocumentId = 1, Title = "Horario", Content = "Abrimos a las 8." },
+            new() { DocumentId = 2, Title = "Acceso FIN-DEMO", Content = "En la segunda casilla pega FIN-DEMO." },
+            new() { DocumentId = 3, Title = "Operaciones", Content = "En la segunda casilla pega OPS-DEMO.",
+                CanReadSensitiveContent = supervisor }
+        }
+    };
+
+    [TestCase("""{"sensitiveQuestion":true,"safeDocumentIds":[1]}""")]
+    [TestCase("resultado sin formato")]
+    public async Task Ask_UsuarioOSalidaDeClasificacionInvalida_DeniegaSinGenerar(string clasificacion)
+    {
+        var handler = RespondeEnOrden(clasificacion);
+
+        var resultado = await Crear(handler).AskAsync(ConsultaRestringida());
+
+        Assert.That(resultado.Answer, Does.Contain("Solicítala directamente al supervisor"));
+        Assert.That(resultado.SourceDocumentIds, Is.Empty);
+        Assert.That(handler.Calls, Is.EqualTo(1));
+    }
+
+    [TestCase("Para Operaciones, pega OPS-DEMO.", true)]
+    [TestCase("INFORMACION_SENSIBLE_NO_DISPONIBLE", false)]
+    public async Task Ask_Supervisor_SoloEnviaDatosSensiblesDeSuDepartamento(string respuestaIa, bool permitido)
+    {
+        var handler = RespondeEnOrden("""{"sensitiveQuestion":true,"safeDocumentIds":[1]}""", respuestaIa);
+
+        var resultado = await Crear(handler).AskAsync(ConsultaRestringida(supervisor: true));
+
+        Assert.That(handler.LastBody, Does.Contain("OPS-DEMO").And.Not.Contain("FIN-DEMO"));
+        Assert.That(resultado.Answer, Does.Contain(permitido ? "OPS-DEMO" : "Solicítala directamente al supervisor"));
+        Assert.That(resultado.SourceDocumentIds, Is.EqualTo(permitido ? new[] { 3 } : Array.Empty<int>()));
+        _limiter.Verify(l => l.Acquire(10, 5), Times.Once);
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task Ask_Usuario_ExcluyeFuentesSensiblesYValidaRespuesta(bool respuestaSegura)
+    {
+        var handler = RespondeEnOrden(
+            """{"sensitiveQuestion":false,"safeDocumentIds":[1]}""",
+            respuestaSegura ? "Abrimos a las 8." : "El dato de acceso es FIN-DEMO.",
+            respuestaSegura ? """{"sensitiveQuestion":false,"safeDocumentIds":[1]}"""
+                : """{"sensitiveQuestion":false,"safeDocumentIds":[]}""");
+
+        var resultado = await Crear(handler).AskAsync(ConsultaRestringida());
+
+        Assert.That(resultado.Answer, Does.Contain(respuestaSegura ? "Abrimos a las 8." : "Solicítala directamente al supervisor"));
+        Assert.That(resultado.SourceDocumentIds, Is.EqualTo(respuestaSegura ? new[] { 1 } : Array.Empty<int>()));
+        Assert.That(handler.Bodies[1], Does.Contain("Horario").And.Not.Contain("FIN-DEMO").And.Not.Contain("OPS-DEMO"));
     }
 
     // ---------- Validaciones (no llaman a la API) ----------
