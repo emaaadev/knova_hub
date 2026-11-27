@@ -140,6 +140,37 @@ public class QueryServiceTests
         _mockDocs.Verify(d => d.GetIndexedTextsAsync(5, Array.Empty<int>()), Times.Once);
     }
 
+    [TestCase(SystemRoles.AdminEmpresaRoleName, true, true, true)]
+    [TestCase(SystemRoles.SupervisorRoleName, true, false, false)]
+    [TestCase(SystemRoles.UsuarioRoleName, false, false, false)]
+    public async Task Ask_CalculaPermisoSensiblePorRolYDepartamento(
+        string role, bool propio, bool ajeno, bool sinDepartamento)
+    {
+        var actor = Actor(1, 5, role);
+        _mockUsers.Setup(u => u.GetByIdInCompanyAsync(5, 1)).ReturnsAsync(UsuarioActivo(1, 5, 10));
+        _mockDepts.Setup(d => d.GetSupervisedAsync(1)).ReturnsAsync(new List<Department>
+        {
+            new() { Id = 10, CompanyId = 5 },
+            new() { Id = 20, CompanyId = 99 }
+        });
+        _mockDocs.Setup(d => d.GetIndexedTextsAsync(5, It.IsAny<int[]?>())).ReturnsAsync(TextosIndexados(
+            new IndexedDocumentText(1, "Propio", "Dato de acceso propio", 10),
+            new IndexedDocumentText(2, "Ajeno general", "Dato de acceso ajeno", 20),
+            new IndexedDocumentText(3, "General", "Dato de acceso sin departamento")));
+        AiRequestDto? request = null;
+        _mockAi.Setup(a => a.AskAsync(It.IsAny<AiRequestDto>(), It.IsAny<CancellationToken>()))
+            .Callback<AiRequestDto, CancellationToken>((r, _) => request = r)
+            .ReturnsAsync(new AiAnswerDto { Answer = "respuesta", SourceDocumentIds = new[] { 1, 999 } });
+
+        var resultado = await _service.AskAsync(actor, "pregunta");
+
+        Assert.That(request!.Context.Select(chunk => chunk.CanReadSensitiveContent),
+            Is.EqualTo(new[] { propio, ajeno, sinDepartamento }));
+        Assert.That(request.EnforceSensitiveContentPolicy, Is.EqualTo(!ajeno));
+        Assert.That(request.CanRequestSensitiveContent, Is.EqualTo(propio));
+        Assert.That(resultado.Sources.Select(source => source.DocumentId), Is.EqualTo(new[] { 1 }));
+    }
+
     // ---------- Construye el request a la IA correctamente ----------
 
     [Test]

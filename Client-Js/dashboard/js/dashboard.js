@@ -141,16 +141,9 @@ async function loadRecommendations() {
         status.textContent = `No se pudieron cargar las recomendaciones. ${error.message}`;
     }
 }
-const HISTORY_KEY = "knovaAiHistory";
-
-function readHistory() {
-    try { return JSON.parse(sessionStorage.getItem(HISTORY_KEY) || "[]"); }
-    catch { return []; }
-}
-
-function saveHistory(history) {
-    try { sessionStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 20))); } catch {}
-}
+// Las consultas autorizadas pueden contener credenciales.
+try { sessionStorage.removeItem("knovaAiHistory"); } catch {}
+let aiHistory = [];
 
 function showAiMessage(id, text = "") {
     $(id).textContent = text;
@@ -173,9 +166,8 @@ function renderAnswer(entry) {
 }
 
 function renderHistory() {
-    const history = readHistory();
-    $("ai-history-box").hidden = history.length === 0;
-    $("ai-history").replaceChildren(...history.map((entry, index) => {
+    $("ai-history-box").hidden = aiHistory.length === 0;
+    $("ai-history").replaceChildren(...aiHistory.map(entry => {
         const li = document.createElement("li");
         const button = document.createElement("button");
         button.type = "button";
@@ -205,7 +197,7 @@ async function askAi(event) {
         const data = await App.api("/api/ai/ask", { method: "POST", body: { question } });
         const entry = { question, answer: data?.answer || "", sources: data?.sources || [] };
         renderAnswer(entry);
-        saveHistory([entry, ...readHistory()]);
+        aiHistory = [entry, ...aiHistory].slice(0, 20);
         renderHistory();
     } catch (error) {
         if (error.status === 429) {

@@ -204,7 +204,7 @@ public class DocumentRepository : IDocumentRepository
             .AsNoTracking()
             .Where(d => d.TextStatus == DocumentTextStatus.Indexado && d.Text != null)
             .OrderByDescending(d => d.UpdatedAt ?? d.CreatedAt)
-            .Select(d => new IndexedDocumentText(d.Id, d.Title, d.Text!.Markdown))
+            .Select(d => new IndexedDocumentText(d.Id, d.Title, d.Text!.Markdown, d.DepartmentId))
             .ToListAsync();
     }
 
